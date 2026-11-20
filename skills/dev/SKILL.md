@@ -42,6 +42,16 @@ orca orchestration worker-start --agent <agent> [--model <model>] --worktree <..
 orca terminal rename --terminal <handle> --title "<vai> · <phần việc>"
 ```
 
+## Ticket
+Tham số ticket là mã (vd. `SG-30200`), link (Jira, Figma…) hoặc một mô tả bằng chữ.
+- **Đọc được thật mới dùng:** mã / link thì đọc nội dung bằng công cụ có sẵn (skill / connector Jira, Figma…). Không đọc
+  được (không có công cụ, chưa đăng nhập, lỗi) → **dừng, báo user** và xin mô tả hoặc quyền truy cập; không đoán yêu cầu
+  từ mã ticket. Mô tả bằng chữ thì dùng luôn làm yêu cầu.
+- **Tên từ ticket** (file `.agents/plans/<tên>.md`, worktree `<tên>-<phần>`, tab `orchestrator · <tên>`): mã ticket thì
+  dùng mã (`SG-30200`); link / mô tả thì rút gọn: bỏ dấu tiếng Việt, chữ thường, chỉ giữ `a-z 0-9` và `-`, các ký tự
+  khác thành `-`, gộp `-` liền nhau, tối đa 40 ký tự (vd. "Thêm tab Thể thao vào Header" → `them-tab-the-thao-vao-header`).
+  Dùng **cùng một tên** cho mọi chỗ trong một lần chạy.
+
 ## Luồng
 0. **Research** (tuỳ chọn): user thêm `--research`, hoặc ticket có điểm chưa rõ. Tách thành câu hỏi độc lập, mỗi câu
    một worker `researcher` trên `--worktree current` (chỉ đọc), song song. Gộp trả lời vào spec; đưa "Lựa chọn" cho

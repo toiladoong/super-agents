@@ -8,7 +8,7 @@ với kết quả này.
 ## Chỉ lập kế hoạch: `/dev plan [--here] [--research] <ticket hoặc mô tả>`
 Chạy bước 0 (nếu cần) và bước 1 rồi **dừng**: không tạo worker coder / reviewer / tester, không sửa code.
 - Kế hoạch theo đúng bước 1 (phần việc, file dự kiến đổi, tiêu chí nghiệm thu, kế hoạch chạy + phụ thuộc, rủi ro gộp), ghi
-  ra `.agents/plans/<ticket>.md` ở gốc repo (không có ticket thì tên ngắn gạch nối từ mô tả). Đầu file ghi: ticket, ngày,
+  ra `.agents/plans/<tên>.md` ở gốc repo (tên theo mục "Ticket" trong `SKILL.md`). Đầu file ghi: ticket, ngày,
   nhánh / commit lúc lập, trạng thái `chờ duyệt`.
 - Hỏi user duyệt; user sửa thì sửa file. Duyệt xong đổi trạng thái thành `đã duyệt`. Không commit file khi user chưa bảo.
 - `--here`: không mở tab orchestrator, tab này làm (research bằng subagent nếu cần).
