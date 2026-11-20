@@ -41,3 +41,10 @@ export function afterPrompt(state: ReviewGuard, text: string): ReviewGuard {
   if (endsReview(text)) return { isActive: false, isTurnAllowed: false }
   return { isActive: true, isTurnAllowed: confirmsFix(text) }
 }
+
+// The dim prompt suggestion (Tab takes it) after a main-loop turn while the review runs: after the report, the usual
+// answer; after a fix turn, ending the review. Null when no review runs.
+export function suggestionAfterTurn(stateBeforeRelock: ReviewGuard): string | null {
+  if (!stateBeforeRelock.isActive) return null
+  return stateBeforeRelock.isTurnAllowed ? 'xong review' : 'sửa hết lỗi chặn'
+}

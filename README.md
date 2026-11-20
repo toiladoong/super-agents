@@ -41,6 +41,9 @@ Cần: Orca đang chạy, `orca` CLI, skill `orchestration` của Orca (`orca sk
 | `/super-agents:review [ticket] [nhánh]` | Lối tắt của dòng trên: chỉ review (không tham số = thay đổi chưa commit) |
 | `/super-agents:review --here [ticket]` | Review gọn trong tab đang mở bằng subagent Claude, không mở tab / worker Orca. **Khoá sửa file** (thanh trạng thái 🔒) tới khi bạn trả lời "sửa 1, 3" / "sửa hết lỗi chặn"; mở đúng lượt đó rồi khoá lại |
 | `/super-agents:review --off` | Tắt khoá (hoặc nói "xong review") |
+
+Trong lúc review `--here`, khung chat trống hiện gợi ý mờ: xong lượt review là **"sửa hết lỗi chặn"**, xong lượt sửa là
+**"xong review"**; bấm **Tab** (hoặc →) để lấy, sửa lại nếu cần (vd. "sửa 1, 3") rồi gửi.
 | `/super-agents:dev status` | Bảng worker đang làm / rảnh / chờ |
 
 Orchestrator dừng hỏi user ở 2 chỗ: duyệt spec, và nghiệm thu trước khi gộp / commit. Worker không commit.

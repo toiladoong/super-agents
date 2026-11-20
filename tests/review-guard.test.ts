@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { confirmsFix, endsReview, isReviewSkill } from '../hooks/review-guard'
+import { confirmsFix, endsReview, isReviewSkill, suggestionAfterTurn } from '../hooks/review-guard'
 
 test('reads the person’s answer', async () => {
   expect(confirmsFix('sửa 1, 3')).toBe(true)
@@ -28,4 +28,10 @@ test('edits wait for "sửa …" during review --here, one turn at a time', asyn
   expect((await edit()).decision).toBe('deny')
   await $.prompt.submit({ text: 'xong review' })
   expect((await edit()).decision).not.toBe('deny')
+})
+
+test('suggests the next answer while the review runs', async () => {
+  expect(suggestionAfterTurn({ isActive: true, isTurnAllowed: false })).toBe('sửa hết lỗi chặn')
+  expect(suggestionAfterTurn({ isActive: true, isTurnAllowed: true })).toBe('xong review')
+  expect(suggestionAfterTurn({ isActive: false, isTurnAllowed: false })).toBeNull()
 })
