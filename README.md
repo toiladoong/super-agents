@@ -35,7 +35,7 @@ Cần: Orca đang chạy, `orca` CLI, skill `orchestration` của Orca (`orca sk
 ## Dùng
 | Lệnh (Claude Code) | Làm gì |
 |---|---|
-| `/super-agents:dev <ticket> [--research]` | Mở tab orchestrator: (research) → spec → code → review → test → nghiệm thu |
+| `/super-agents:dev <ticket> [--research]` | Mở tab orchestrator: (research, khi có `--research` hoặc ticket chưa rõ) → kế hoạch → bạn duyệt → code → review → test → nghiệm thu → bạn duyệt |
 | `/super-agents:dev research <câu hỏi>` | Chỉ tìm hiểu, không code |
 | `/super-agents:dev review <ticket> [nhánh]` | Code đã viết sẵn: review → sửa → test |
 | `/super-agents:review [ticket] [nhánh]` | Lối tắt của dòng trên: chỉ review (không tham số = thay đổi chưa commit) |

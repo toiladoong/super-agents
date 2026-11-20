@@ -4,6 +4,6 @@
   "description": "Nhóm agent trong Orca: orchestrator điều phối researcher, coder, reviewer, tester.",
   "owner": { "name": "Doong" },
   "plugins": [
-    { "name": "super-agents", "description": "Lệnh /super-agents:dev — research → code → review → test bằng worker Orca.", "source": "./", "category": "productivity" }
+    { "name": "super-agents", "description": "Lệnh /super-agents:dev — kế hoạch → code → review → test bằng worker Orca, bạn duyệt kế hoạch và nghiệm thu; /super-agents:review chỉ review.", "source": "./", "category": "productivity" }
   ]
 }
