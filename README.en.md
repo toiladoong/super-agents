@@ -116,3 +116,6 @@ Agent Office panel in Orca. The **Guide** button under the office opens an expla
 
 Code is in `hooks/` (`register.tsx`, `agents.ts`, `office-svg.ts`), types in `types/`, tests in `tests/`:
 `claude plugin validate .` and `claude plugin test .`.
+
+When you add or change a command, update both guides, each in vi + en: `hooks/help.ts` (the `/office` pane) and
+`orca-office/shared/i18n.js` (the Orca panel), plus the command tables in `README.md` / `README.en.md`.

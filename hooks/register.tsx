@@ -27,9 +27,14 @@ let pollTimer: Timer | undefined
 
 const loopKey = (agentId: string | undefined) => agentId ?? MAIN_KEY
 
-// The repo's `language` in .agents/team.json (Vietnamese when there is none).
+// The repo's `language` in .agents/team.json (Vietnamese when there is none). A session opened in a sub-folder
+// (e.g. webApp/) still finds the repo's file up to two levels above.
 async function readLanguage($: EngineInterface): Promise<Lang> {
-  return languageOf(await $.fs.read(TEAM_FILE).catch(() => null))
+  for (const path of [TEAM_FILE, `../${TEAM_FILE}`, `../../${TEAM_FILE}`]) {
+    const teamJson = await $.fs.read(path).catch(() => null)
+    if (teamJson !== null) return languageOf(teamJson)
+  }
+  return 'vi'
 }
 
 async function refresh($: EngineInterface): Promise<void> {

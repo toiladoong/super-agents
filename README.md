@@ -116,3 +116,6 @@ pane `/office` lẫn panel trong Orca).
 
 Mã ở `hooks/` (`register.tsx`, `agents.ts`, `office-svg.ts`), kiểu ở `types/`, test ở `tests/`:
 `claude plugin validate .` và `claude plugin test .`.
+
+Thêm / đổi lệnh thì sửa cả hai bản hướng dẫn, mỗi bản đủ vi + en: `hooks/help.ts` (pane `/office`) và
+`orca-office/shared/i18n.js` (panel Orca), cùng bảng lệnh trong `README.md` / `README.en.md`.
