@@ -27,19 +27,21 @@ export function isReviewSkill(skill: string): boolean {
   return /(^|:)review$/.test(skill)
 }
 
-const DECLINES = /không\s+sửa|đừng\s+sửa|bỏ\s+qua/iu
+// Only the start of the answer decides: "sửa 1, bỏ qua 3" fixes 1, "lỗi 2 sửa thế nào?" is a question, not a go-ahead.
+const CONFIRMS = /^\s*((ok|okay|đồng ý|được)\s*[,.:]?\s*)?(sửa|fix)(?![\p{L}])/iu
+const DECLINES = /^\s*(không\s+sửa|đừng\s+sửa|bỏ\s+qua)(?![\p{L}])/iu
 
 export function confirmsFix(text: string): boolean {
-  return /(^|[^\p{L}])(sửa|fix)([^\p{L}]|$)/iu.test(text) && !DECLINES.test(text) && !/chưa\s+sửa/iu.test(text)
+  return CONFIRMS.test(text)
 }
 
 export function endsReview(text: string): boolean {
-  return /xong review|kết thúc review|--off\b/iu.test(text) || DECLINES.test(text)
+  return /xong review|kết thúc review/iu.test(text) || DECLINES.test(text)
 }
 
-// Another slash command than the review means the person moved on.
+// Another slash command than the review means the person moved on (a pasted path such as /c/Users/… is not one).
 export function movesOn(text: string): boolean {
-  const command = /^\s*\/([\w:-]+)/.exec(text)?.[1]
+  const command = /^\s*\/([\w:-]+)(?=\s|$)/.exec(text)?.[1]
   return Boolean(command && !isReviewSkill(command))
 }
 
@@ -50,6 +52,9 @@ export function finishesReview(answer: string): boolean {
 // The guard after the review skill is called with `args` (Skill tool or a typed command): `--here` starts it locked,
 // `--off` ends it. Hooks on skill.prompt are bypassed for plugins, so the call is caught at the tool and the prompt.
 export function afterReviewCommand(state: ReviewGuard, skill: string, args: string): ReviewGuard {
+  // `/super-agents:dev review here …` is the same review as `/super-agents:review here …`.
+  const devReview = /(^|:)dev$/.test(skill) ? /^\s*review(?=\s|$)([\s\S]*)$/.exec(args) : null
+  if (devReview) return afterReviewCommand(state, 'review', devReview[1] ?? '')
   if (!isReviewSkill(skill)) return state
   const mode = reviewMode(args)
   if (mode === 'off') return OFF
@@ -64,10 +69,13 @@ export function reviewMode(args: string): 'here' | 'off' | null {
   return /--here\b/.test(args) ? 'here' : null
 }
 
-// A typed "/super-agents:review …" (or "/review …"): the skill and its arguments, else null.
+// A typed "/super-agents:review …", "/review …" or "/super-agents:dev review …": the skill and its arguments, else null.
 export function typedReviewCommand(text: string): { skill: string; args: string } | null {
-  const match = /^\s*\/([\w-]+:)?(review)\b([\s\S]*)$/.exec(text)
-  return match ? { skill: `${match[1] ?? ''}${match[2]}`, args: match[3] ?? '' } : null
+  const match = /^\s*\/([\w-]+:)?(review|dev)(?=\s|$)([\s\S]*)$/.exec(text)
+  if (!match) return null
+  const skill = `${match[1] ?? ''}${match[2]}`
+  const args = match[3] ?? ''
+  return match[2] === 'dev' && !/^\s*review(?=\s|$)/.test(args) ? null : { skill, args }
 }
 
 // The guard after the person's prompt: "sửa …" opens this turn, a decline / another command / "xong review" ends it,

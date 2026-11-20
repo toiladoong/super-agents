@@ -9,6 +9,13 @@ test('reads the person’s answer', async () => {
   expect(confirmsFix('chưa sửa, giải thích lỗi 2')).toBe(false)
   expect(confirmsFix('lỗi 2 là gì?')).toBe(false)
   expect(endsReview('xong review')).toBe(true)
+  expect(confirmsFix('lỗi 2 sửa thế nào?')).toBe(false)
+  expect(confirmsFix('sửa 1, bỏ qua 3')).toBe(true)
+  expect(endsReview('sửa 1, bỏ qua 3')).toBe(false)
+  expect(confirmsFix('đồng ý, sửa hết')).toBe(true)
+  expect(movesOn('/c/Users/doong/a.ts lỗi ở đây')).toBe(false)
+  expect(typedReviewCommand('/review-ui x')).toBeNull()
+  expect(typedReviewCommand('/super-agents:dev status')).toBeNull()
   expect(endsReview('không sửa')).toBe(true)
   expect(endsReview('bỏ qua hết')).toBe(true)
   expect(endsReview('chưa sửa, giải thích lỗi 2')).toBe(false)
@@ -29,6 +36,8 @@ test('reads the person’s answer', async () => {
   expect(reviewMode('SG-1 --here')).toBe('here')
   expect(reviewMode('SG-1 click here')).toBeNull()
   expect(afterReviewCommand(off, 'super-agents:review', 'here')).toEqual({ isActive: true, isTurnAllowed: false })
+  expect(afterReviewCommand(off, 'super-agents:dev', 'review here SG-1')).toEqual({ isActive: true, isTurnAllowed: false })
+  expect(afterReviewCommand(off, 'super-agents:dev', 'plan here SG-1')).toEqual(off)
 })
 
 test('edits wait for "sửa …" during review --here, one turn at a time', async ($, on) => {
