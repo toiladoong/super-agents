@@ -36,8 +36,9 @@ Cần: Orca đang chạy, `orca` CLI, skill `orchestration` của Orca (`orca sk
 
 ## Ngôn ngữ
 Mặc định **tiếng Việt**. Đặt `"language": "en"` trong `.agents/team.json` của repo (hoặc chọn trong editor Team) để AI
-trả lời, viết kế hoạch và báo cáo bằng tiếng Anh; pane `/office` cũng theo `language` này. Panel Agent Office và editor
-Team của Orca theo cài đặt Orca Settings → plugin Agent Office → **Ngôn ngữ**. Khi review, câu trả lời tiếng Việt và
+trả lời, viết kế hoạch và báo cáo bằng tiếng Anh; pane `/office`, panel Agent Office và editor Team của
+Orca cũng theo `language` này (panel lấy theo workspace đang mở; workspace chưa đặt thì theo Orca Settings → plugin
+Agent Office → **Ngôn ngữ**). Khi review, câu trả lời tiếng Việt và
 tiếng Anh đều được hiểu ("sửa 1, 3" / "fix 1, 3", "không sửa" / "skip", "xong review" / "done review").
 
 ## Dùng

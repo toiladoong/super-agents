@@ -3,6 +3,7 @@
 // Orca transpiles this file when it loads: no build step.
 import { execFile } from 'node:child_process'
 import { existsSync } from 'node:fs'
+import { readFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import type { OrcaWorkerApi } from 'orca/worker'
@@ -84,19 +85,40 @@ async function agentsSnapshot() {
   )
 }
 
+// The focused workspace: by the id readContext gives since host API 1.7, else by name, then by branch.
+async function focusedWorkspace(orca: OrcaWorkerApi) {
+  const context = await orca.host.call('workspace.readContext', {})
+  if (!context) return { context, workspace: undefined }
+  const { workspaces } = await orca.host.call('workspace.list', {})
+  const workspace =
+    workspaces.find((candidate) => candidate.id === context.workspaceId) ??
+    workspaces.find((candidate) => candidate.name === context.displayName) ??
+    workspaces.find((candidate) => candidate.branch === context.branch)
+  return { context, workspace }
+}
+
+// The panel's language: `language` in the focused workspace's team.json (the one the AI replies in), else the plugin
+// setting, else Vietnamese.
+async function panelLanguage(orca: OrcaWorkerApi): Promise<'vi' | 'en'> {
+  const { workspace } = await focusedWorkspace(orca).catch(() => ({ workspace: undefined }))
+  const teamJson = workspace ? await readFile(join(workspace.path, TEAM_PATH), 'utf8').catch(() => null) : null
+  let language: unknown
+  try {
+    language = teamJson ? JSON.parse(teamJson).language : undefined
+  } catch {}
+  language ??= await orca.settings.get('language').catch(() => 'vi')
+  return language === 'en' ? 'en' : 'vi'
+}
+
 export default function activate(orca: OrcaWorkerApi): void {
   orca.panels.handle('agents.snapshot', async () => ({ agents: await agentsSnapshot() }))
+  orca.panels.handle('language.get', async () => ({ language: await panelLanguage(orca) }))
 
-  // Opens the focused workspace's team.json; the panel shows the answer, in the plugin's language setting.
+  // Opens the focused workspace's team.json; the panel shows the answer in the panel's language.
   orca.panels.handle('team.open', async () => {
-    const say = (await orca.settings.get('language').catch(() => 'vi')) === 'en' ? MESSAGES.en : MESSAGES.vi
-    const context = await orca.host.call('workspace.readContext', {})
+    const say = MESSAGES[await panelLanguage(orca)]
+    const { context, workspace } = await focusedWorkspace(orca)
     if (!context) return { opened: false, message: say.noWorkspace }
-    const { workspaces } = await orca.host.call('workspace.list', {})
-    // readContext gives no id: match the focused workspace by its name, then by branch.
-    const workspace =
-      workspaces.find((candidate) => candidate.name === context.displayName) ??
-      workspaces.find((candidate) => candidate.branch === context.branch)
     if (!workspace) return { opened: false, message: say.noMatch(context.displayName) }
     try {
       await orca.host.call('editor.open', { workspaceId: workspace.id, path: TEAM_PATH })

@@ -72,7 +72,7 @@
         <li><code>/super-agents:review [ticket] [nhánh]</code> chỉ review code đã viết; ticket làm tiêu chí nghiệm thu, không ghi nhánh = thay đổi chưa commit</li>
         <li><code>/super-agents:review here [ticket]</code> review gọn trong tab đang mở, không mở tab / worker mới; hỏi bạn chọn lỗi trước khi sửa</li>
         <li><code>/super-agents:dev status</code> xem worker nào đang làm / rảnh</li>
-        <li>Ngôn ngữ của panel: Orca Settings → plugin Agent Office → <b>Ngôn ngữ</b>.</li>
+        <li>Ngôn ngữ của panel theo <code>"language"</code> trong <code>team.json</code> của workspace đang mở (chọn trong <b>⚙ Team</b>); workspace chưa đặt thì theo Orca Settings → plugin Agent Office → <b>Ngôn ngữ</b>.</li>
       </ul>`,
     en: `
       <ul>
@@ -93,28 +93,32 @@
         <li><code>/super-agents:review [ticket] [branch]</code> only reviews written code; the ticket gives the acceptance criteria, no branch = uncommitted changes</li>
         <li><code>/super-agents:review here [ticket]</code> reviews right in the open tab, no new tab / worker; asks you which findings to fix first</li>
         <li><code>/super-agents:dev status</code> shows which workers are busy / free</li>
-        <li>Panel language: Orca Settings → Agent Office plugin → <b>Language</b>.</li>
+        <li>The panel follows <code>"language"</code> in the focused workspace's <code>team.json</code> (pick it in <b>⚙ Team</b>); a workspace without one follows Orca Settings → Agent Office plugin → <b>Language</b>.</li>
       </ul>`
   }
 
   const api = { lang: 'vi', t: TEXT.vi, guide: GUIDE.vi, text: TEXT, guides: GUIDE }
 
-  // Reads the setting (missing permission or value → Vietnamese) and calls onChange when the person switches it.
+  // The language comes from the worker: the focused workspace's team.json `language`, else the plugin setting. Checked
+  // again every few seconds (another workspace focused, team.json saved); onChange runs only when it changes.
   api.load = async function load(onChange) {
-    const apply = (value) => {
-      api.lang = value === 'en' ? 'en' : 'vi'
-      api.t = TEXT[api.lang]
-      api.guide = GUIDE[api.lang]
+    const apply = async () => {
+      const answer = await orca.plugin.request('language.get').catch(() => null)
+      const lang = (answer ? answer.language : api.lang) === 'en' ? 'en' : 'vi'
+      if (lang === api.lang) return false
+      api.lang = lang
+      api.t = TEXT[lang]
+      api.guide = GUIDE[lang]
+      return true
     }
+    const handleCheck = async () => {
+      if ((await apply()) && onChange) onChange()
+    }
+    await apply()
+    setInterval(handleCheck, 3000)
     try {
-      apply(await orca.settings.get('language'))
-      orca.settings.onDidChange(async () => {
-        apply(await orca.settings.get('language'))
-        if (onChange) onChange()
-      })
-    } catch {
-      apply('vi')
-    }
+      orca.settings.onDidChange(handleCheck)
+    } catch {}
     return api
   }
 

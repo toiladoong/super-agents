@@ -2,7 +2,7 @@
   "manifestVersion": 2,
   "id": "super-agents-office",
   "name": "Agent Office",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Văn phòng pixel cho các agent đang chạy trong Orca, và trình sửa trực quan team.json của super-agents (vai, AI, model, luật repo).",
   "engines": {
     "orca": ">=1.4.248"
@@ -34,7 +34,7 @@
       {
         "key": "language",
         "title": "Ngôn ngữ / Language",
-        "description": "Ngôn ngữ của panel Agent Office và editor Team. / Language of the Agent Office panel and the Team editor.",
+        "description": "Ngôn ngữ của panel Agent Office và editor Team khi team.json của workspace chưa đặt \"language\". / Language of the Agent Office panel and the Team editor when the workspace's team.json sets no \"language\".",
         "type": "string",
         "default": "vi",
         "enum": [

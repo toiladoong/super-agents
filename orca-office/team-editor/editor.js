@@ -191,7 +191,7 @@
 
   document.getElementById('add-note').addEventListener('click', handleNoteAdd)
   session.onReplace(render)
-  // The editor's own words follow the plugin's language setting (Orca Settings), not the file's.
+  // The editor's own words follow the focused workspace's team.json `language` (else the plugin setting).
   await window.officeI18n.load(render)
   render()
 })()

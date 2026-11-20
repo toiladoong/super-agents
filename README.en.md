@@ -36,8 +36,8 @@ Requires: Orca running, the `orca` CLI, Orca's `orchestration` skill (`orca skil
 
 ## Language
 Replies, plans and reports follow `"language": "vi" | "en"` in the repo's `.agents/team.json` (default `vi`; also
-selectable in the Team editor). The Orca panel and the Team editor follow the plugin setting Orca Settings → Agent
-Office → Language (default Vietnamese). The `/office` pane follows the repo's `language`. Review answers are understood
+selectable in the Team editor). The `/office` pane, the Orca panel and the Team editor follow it too (the panel takes
+the focused workspace's; one without `language` follows Orca Settings → Agent Office → Language). Review answers are understood
 in both languages (e.g. "sửa 1, 3" / "fix 1, 3", "không sửa" / "skip").
 
 ## Usage
