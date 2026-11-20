@@ -47,16 +47,25 @@ export function finishesReview(answer: string): boolean {
   return answer.includes(DONE_MARKER)
 }
 
-// The guard after a skill prompt: `--here` on a review starts it locked, `--off` ends it.
-export function afterSkillPrompt(state: ReviewGuard, skill: string, text: string): ReviewGuard {
+// The guard after the review skill is called with `args` (Skill tool or a typed command): `--here` starts it locked,
+// `--off` ends it. Hooks on skill.prompt are bypassed for plugins, so the call is caught at the tool and the prompt.
+export function afterReviewCommand(state: ReviewGuard, skill: string, args: string): ReviewGuard {
   if (!isReviewSkill(skill)) return state
-  if (/--off\b/.test(text)) return OFF
-  return /--here\b/.test(text) ? { isActive: true, isTurnAllowed: false } : state
+  if (/--off\b/.test(args)) return OFF
+  return /--here\b/.test(args) ? { isActive: true, isTurnAllowed: false } : state
+}
+
+// A typed "/super-agents:review …" (or "/review …"): the skill and its arguments, else null.
+export function typedReviewCommand(text: string): { skill: string; args: string } | null {
+  const match = /^\s*\/([\w-]+:)?(review)\b([\s\S]*)$/.exec(text)
+  return match ? { skill: `${match[1] ?? ''}${match[2]}`, args: match[3] ?? '' } : null
 }
 
 // The guard after the person's prompt: "sửa …" opens this turn, a decline / another command / "xong review" ends it,
 // anything else keeps it locked.
 export function afterPrompt(state: ReviewGuard, text: string): ReviewGuard {
+  const command = typedReviewCommand(text)
+  if (command) return afterReviewCommand(state, command.skill, command.args)
   if (!state.isActive) return state
   if (endsReview(text) || movesOn(text)) return OFF
   return { isActive: true, isTurnAllowed: confirmsFix(text) }

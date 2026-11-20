@@ -4,7 +4,7 @@ import type { EngineInterface, Register, Timer } from 'claude-code'
 import type { OfficeView } from '../types'
 import { MAIN_KEY, newActivity, officeAgents } from './agents'
 import { OFFICE_HELP } from './help'
-import { DENY_REASON, EDIT_TOOLS, afterPrompt, afterSkillPrompt, afterTurn, guardStatus, suggestionAfterTurn } from './review-guard'
+import { DENY_REASON, EDIT_TOOLS, afterPrompt, afterReviewCommand, afterTurn, guardStatus, suggestionAfterTurn } from './review-guard'
 import type { ReviewGuard } from './review-guard'
 import { elapsed, officeSvg } from './office-svg'
 
@@ -46,13 +46,6 @@ async function setReviewGuard($: EngineInterface, next: ReviewGuard): Promise<vo
 
 export const register: Register = (on) => {
   // review --here: lock edits until the person answers "sửa …" (rules in review-guard.ts).
-  on('skill.prompt', async ($, e, next) => {
-    const state = await read($, reviewGuard)
-    const nextState = afterSkillPrompt(state, e.skill, e.text)
-    if (nextState !== state) await setReviewGuard($, nextState)
-    return next(e)
-  })
-
   // Claude Code's own after-turn suggestion (what Orca's chat box shows): replaced by the review's next answer.
   on('prompt.suggest', async ($, e, next) => {
     const suggestion = await read($, reviewSuggestion)
@@ -114,6 +107,12 @@ export const register: Register = (on) => {
     const key = loopKey(e.agentId)
     activity.asking.delete(key)
     activity.lastTool.set(key, e.tool)
+    if (e.tool === 'Skill') {
+      // Claude calling the review skill with --here / --off switches the review guard.
+      const state = await read($, reviewGuard)
+      const nextState = afterReviewCommand(state, e.skill, e.args ?? '')
+      if (nextState !== state) await setReviewGuard($, nextState)
+    }
     return next(e)
   })
 
