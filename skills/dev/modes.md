@@ -44,9 +44,12 @@ Claude Code** (Agent tool) ngay trong tab, kết quả trả về tab. Chỉ có
   gợi ý sau; mỗi lỗi `file:dòng`, vì sao, cách sửa) và hỏi: sửa lỗi nào (vd. "sửa 1, 3", "sửa hết lỗi chặn", "không sửa").
   **Không sửa file nào** cho tới khi user trả lời; im lặng hay trả lời không rõ = không sửa. Mỗi vòng sửa sau cũng hỏi lại.
   Trong Claude Code, mod của plugin chặn cứng Edit / Write tới khi user trả lời "sửa …" (mở đúng lượt đó; `--off` hoặc
-  "xong review" thì tắt); bị từ chối thì báo bảng lỗi và hỏi, đừng thử lại hay sửa bằng Bash.
+  "xong review" thì tắt; khoá cũng tự tắt khi thấy dòng `✅ Review xong`, khi user trả lời "không sửa" / "bỏ qua", hoặc khi
+  user gõ lệnh `/…` khác); bị từ chối thì báo bảng lỗi và hỏi, đừng thử lại hay sửa bằng Bash.
 - **Sửa:** chỉ đúng các lỗi user chọn. Tab này tự sửa (theo `roles/coder.md`: tối thiểu, kèm test tái hiện); rồi một
   subagent review lại chỉ kiểm tra lỗi đã đóng chưa. Dừng khi không còn tiến bộ.
 - **Test:** subagent tester (agent tester của repo nếu có, vd. `web-tester`) hoặc tab tự test theo `roles/tester.md`.
-- **Nghiệm thu:** tóm tắt như bước 5. Không commit khi user chưa bảo.
+- **Nghiệm thu:** tóm tắt như bước 5. Không commit khi user chưa bảo. Câu trả lời nghiệm thu (review đã xong: không còn lỗi
+  user chọn sửa, hoặc user không sửa) **kết thúc bằng đúng một dòng `✅ Review xong`**: mod của plugin thấy dòng này thì tự
+  tắt khoá sửa file. Chỉ in dòng này ở cuối cả cuộc review, không in sau từng vòng.
 - Luật chung vẫn giữ: chặn / gợi ý, chỉ `CONFIRMED` mới sửa, tài nguyên của tester một lúc một việc.

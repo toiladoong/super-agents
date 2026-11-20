@@ -4,7 +4,7 @@ import type { EngineInterface, Register, Timer } from 'claude-code'
 import type { OfficeView } from '../types'
 import { MAIN_KEY, newActivity, officeAgents } from './agents'
 import { OFFICE_HELP } from './help'
-import { DENY_REASON, EDIT_TOOLS, afterPrompt, afterSkillPrompt, guardStatus, suggestionAfterTurn } from './review-guard'
+import { DENY_REASON, EDIT_TOOLS, afterPrompt, afterSkillPrompt, afterTurn, guardStatus, suggestionAfterTurn } from './review-guard'
 import type { ReviewGuard } from './review-guard'
 import { elapsed, officeSvg } from './office-svg'
 
@@ -78,11 +78,14 @@ export const register: Register = (on) => {
   on('turn.complete', async ($, e, next) => {
     if (!e.agentId) activity.mainState = 'waiting'
     activity.asking.delete(loopKey(e.agentId))
-    const guardState = await read($, reviewGuard)
-    if (!e.agentId && guardState.isActive && guardState.isTurnAllowed) await setReviewGuard($, { isActive: true, isTurnAllowed: false })
-    const suggestion = e.agentId ? null : suggestionAfterTurn(guardState)
-    // The box takes a suggestion only once the turn has ended, so offer it a moment after.
-    if (suggestion) $.clock.after(400, () => void $.prompt.suggest({ text: suggestion }))
+    if (!e.agentId) {
+      const guardState = await read($, reviewGuard)
+      const nextGuard = afterTurn(guardState, e.answer)
+      if (nextGuard !== guardState) await setReviewGuard($, nextGuard)
+      const suggestion = suggestionAfterTurn(guardState, e.answer)
+      // The box takes a suggestion only once the turn has ended, so offer it a moment after.
+      if (suggestion) $.clock.after(400, () => void $.prompt.suggest({ text: suggestion }))
+    }
     return next(e)
   })
 

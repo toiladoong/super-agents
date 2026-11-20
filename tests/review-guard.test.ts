@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { confirmsFix, endsReview, isReviewSkill, suggestionAfterTurn } from '../hooks/review-guard'
+import { DONE_MARKER, confirmsFix, endsReview, isReviewSkill, movesOn, suggestionAfterTurn } from '../hooks/review-guard'
 
 test('reads the person’s answer', async () => {
   expect(confirmsFix('sửa 1, 3')).toBe(true)
@@ -9,6 +9,12 @@ test('reads the person’s answer', async () => {
   expect(confirmsFix('chưa sửa, giải thích lỗi 2')).toBe(false)
   expect(confirmsFix('lỗi 2 là gì?')).toBe(false)
   expect(endsReview('xong review')).toBe(true)
+  expect(endsReview('không sửa')).toBe(true)
+  expect(endsReview('bỏ qua hết')).toBe(true)
+  expect(endsReview('chưa sửa, giải thích lỗi 2')).toBe(false)
+  expect(movesOn('/office')).toBe(true)
+  expect(movesOn('/super-agents:review --here')).toBe(false)
+  expect(movesOn('sửa 1')).toBe(false)
   expect(isReviewSkill('super-agents:review')).toBe(true)
   expect(isReviewSkill('ponytail:ponytail-review')).toBe(false)
 })
@@ -26,12 +32,20 @@ test('edits wait for "sửa …" during review --here, one turn at a time', asyn
   expect((await edit()).decision).not.toBe('deny')
   await $.turn.complete({ answer: '', durationMs: 1, isAborted: false, turnId: 't1', reason: 'answer' } as never)
   expect((await edit()).decision).toBe('deny')
-  await $.prompt.submit({ text: 'xong review' })
+  await $.prompt.submit({ text: 'sửa 2' })
+  await $.turn.complete({ answer: `Nghiệm thu …
+${DONE_MARKER}`, durationMs: 1, isAborted: false, turnId: 't2', reason: 'answer' } as never)
+  expect((await edit()).decision).not.toBe('deny')
+  await $.skill.prompt({ skill: 'super-agents:review', text: 'ARGUMENTS: --here' })
+  expect((await edit()).decision).toBe('deny')
+  await $.prompt.submit({ text: '/office' })
   expect((await edit()).decision).not.toBe('deny')
 })
 
 test('suggests the next answer while the review runs', async () => {
-  expect(suggestionAfterTurn({ isActive: true, isTurnAllowed: false })).toBe('sửa hết lỗi chặn')
-  expect(suggestionAfterTurn({ isActive: true, isTurnAllowed: true })).toBe('xong review')
-  expect(suggestionAfterTurn({ isActive: false, isTurnAllowed: false })).toBeNull()
+  expect(suggestionAfterTurn({ isActive: true, isTurnAllowed: false }, 'Bảng lỗi …')).toBe('sửa hết lỗi chặn')
+  expect(suggestionAfterTurn({ isActive: true, isTurnAllowed: true }, 'Đã sửa 1, 3')).toBe('xong review')
+  expect(suggestionAfterTurn({ isActive: true, isTurnAllowed: true }, `Tóm tắt
+${DONE_MARKER}`)).toBeNull()
+  expect(suggestionAfterTurn({ isActive: false, isTurnAllowed: false }, '')).toBeNull()
 })

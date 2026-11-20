@@ -1,10 +1,17 @@
 // Rules of the `/super-agents:review --here` guard (the hooks that apply them are in register.tsx: an engine `$` is only
 // followed into functions of the same file). While that review runs, no file is edited until the person answers with a
-// "sửa …" prompt; the unlock lasts that one turn, the next round asks again. `--off` or "xong review" ends it.
+// "sửa …" prompt; the unlock lasts that one turn, the next round asks again.
+// It ends by itself: Claude closes the review with DONE_MARKER, the person declines ("không sửa", "bỏ qua"), or the
+// person moves on to another slash command. "xong review" / `--off` end it by hand.
 // Bash can still write files: this guards the edit tools, the skill's own rule covers the rest.
 export type ReviewGuard = { isActive: boolean; isTurnAllowed: boolean }
 
+const OFF: ReviewGuard = { isActive: false, isTurnAllowed: false }
+
 export const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit'])
+
+// The skill tells Claude to end the review's final summary with this line; the guard turns off when it sees it.
+export const DONE_MARKER = '✅ Review xong'
 
 export const DENY_REASON =
   'super-agents review --here: chưa được sửa. Báo bảng lỗi đánh số và hỏi user sửa lỗi nào; chỉ sửa sau khi user trả lời "sửa …".'
@@ -20,31 +27,50 @@ export function isReviewSkill(skill: string): boolean {
   return /(^|:)review$/.test(skill)
 }
 
+const DECLINES = /không\s+sửa|đừng\s+sửa|bỏ\s+qua/iu
+
 export function confirmsFix(text: string): boolean {
-  return /(^|[^\p{L}])(sửa|fix)([^\p{L}]|$)/iu.test(text) && !/không\s+sửa|đừng\s+sửa|chưa\s+sửa/iu.test(text)
+  return /(^|[^\p{L}])(sửa|fix)([^\p{L}]|$)/iu.test(text) && !DECLINES.test(text) && !/chưa\s+sửa/iu.test(text)
 }
 
 export function endsReview(text: string): boolean {
-  return /xong review|kết thúc review|--off\b/iu.test(text)
+  return /xong review|kết thúc review|--off\b/iu.test(text) || DECLINES.test(text)
+}
+
+// Another slash command than the review means the person moved on.
+export function movesOn(text: string): boolean {
+  const command = /^\s*\/([\w:-]+)/.exec(text)?.[1]
+  return Boolean(command && !isReviewSkill(command))
+}
+
+export function finishesReview(answer: string): boolean {
+  return answer.includes(DONE_MARKER)
 }
 
 // The guard after a skill prompt: `--here` on a review starts it locked, `--off` ends it.
 export function afterSkillPrompt(state: ReviewGuard, skill: string, text: string): ReviewGuard {
   if (!isReviewSkill(skill)) return state
-  if (endsReview(text)) return { isActive: false, isTurnAllowed: false }
+  if (/--off\b/.test(text)) return OFF
   return /--here\b/.test(text) ? { isActive: true, isTurnAllowed: false } : state
 }
 
-// The guard after the person's prompt: "sửa …" opens this turn, anything else keeps it locked, "xong review" ends it.
+// The guard after the person's prompt: "sửa …" opens this turn, a decline / another command / "xong review" ends it,
+// anything else keeps it locked.
 export function afterPrompt(state: ReviewGuard, text: string): ReviewGuard {
   if (!state.isActive) return state
-  if (endsReview(text)) return { isActive: false, isTurnAllowed: false }
+  if (endsReview(text) || movesOn(text)) return OFF
   return { isActive: true, isTurnAllowed: confirmsFix(text) }
 }
 
-// The dim prompt suggestion (Tab takes it) after a main-loop turn while the review runs: after the report, the usual
-// answer; after a fix turn, ending the review. Null when no review runs.
-export function suggestionAfterTurn(stateBeforeRelock: ReviewGuard): string | null {
-  if (!stateBeforeRelock.isActive) return null
-  return stateBeforeRelock.isTurnAllowed ? 'xong review' : 'sửa hết lỗi chặn'
+// The guard after a main-loop turn: off once Claude closed the review, locked again after a fix turn.
+export function afterTurn(state: ReviewGuard, answer: string): ReviewGuard {
+  if (!state.isActive) return state
+  if (finishesReview(answer)) return OFF
+  return state.isTurnAllowed ? { isActive: true, isTurnAllowed: false } : state
+}
+
+// The dim prompt suggestion (Tab takes it) after a main-loop turn while the review runs. Null once it ended.
+export function suggestionAfterTurn(stateBefore: ReviewGuard, answer: string): string | null {
+  if (!stateBefore.isActive || finishesReview(answer)) return null
+  return stateBefore.isTurnAllowed ? 'xong review' : 'sửa hết lỗi chặn'
 }
