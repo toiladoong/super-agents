@@ -1,8 +1,8 @@
 ---
 name: dev
-description: Chạy một ticket / tính năng bằng nhóm worker Orca — orchestrator điều phối research → coder → review → test; /dev review cho code đã viết sẵn; /dev research chỉ tìm hiểu; /dev status xem worker nào đang làm / rảnh. Vai trò và AI lấy từ .agents/team.json của repo (mặc định Claude). Dùng khi user gọi /dev, hoặc bảo chia việc cho nhiều agent / worker Orca.
+description: Chạy một ticket / tính năng bằng nhóm worker Orca — orchestrator điều phối (research) → kế hoạch → coder → review → test; /dev plan chỉ lập kế hoạch (lưu .agents/plans/<ticket>.md) rồi dừng; /dev review cho code đã viết sẵn; /dev research chỉ tìm hiểu; /dev status xem worker nào đang làm / rảnh. Vai trò và AI lấy từ .agents/team.json của repo (mặc định Claude). Dùng khi user gọi /dev, hoặc bảo chia việc cho nhiều agent / worker Orca.
 ---
-# /dev <ticket hoặc mô tả> [--research]  ·  /dev research <câu hỏi>  ·  /dev review [--here] <ticket> [nhánh]  ·  /dev status
+# /dev <ticket hoặc mô tả> [--research]  ·  /dev plan [--here] <ticket>  ·  /dev research <câu hỏi>  ·  /dev review [--here] <ticket> [nhánh]  ·  /dev status
 
 `SKILL_DIR` = đường dẫn tuyệt đối của thư mục chứa file này. Vai mặc định ở `SKILL_DIR/roles/`, các chế độ phụ ở
 `SKILL_DIR/modes.md`.
@@ -10,6 +10,8 @@ description: Chạy một ticket / tính năng bằng nhóm worker Orca — orch
 ## Ai chạy skill này
 - **Prompt bắt đầu bằng "Bạn là orchestrator"** → bạn là orchestrator: đọc `SKILL_DIR/roles/orchestrator.md`, rồi làm theo luồng dưới đây.
 - **`/dev status`** → không mở tab orchestrator, làm theo mục "Theo dõi" trong `modes.md`.
+- **`plan` có cờ `--here`** → không mở tab orchestrator: bạn lập kế hoạch ngay tại tab này, theo mục "Chỉ lập kế hoạch" trong
+  `modes.md`.
 - **`review` có cờ `--here`** → không mở tab orchestrator: bạn là orchestrator ngay tại tab này, làm theo mục "Trong 1 tab" trong
   `modes.md` (subagent thay cho worker Orca).
 - **Còn lại** (user gõ `/dev` trong phiên thường) → mở tab orchestrator rồi dừng, không tự làm luồng:
@@ -44,7 +46,8 @@ orca terminal rename --terminal <handle> --title "<vai> · <phần việc>"
 0. **Research** (tuỳ chọn): user thêm `--research`, hoặc ticket có điểm chưa rõ. Tách thành câu hỏi độc lập, mỗi câu
    một worker `researcher` trên `--worktree current` (chỉ đọc), song song. Gộp trả lời vào spec; đưa "Lựa chọn" cho
    user chọn nếu có.
-1. **Spec** (orchestrator tự làm): đọc ticket (Jira / Figma nếu có công cụ), viết kế hoạch: phần việc, file dự kiến đổi,
+1. **Spec** (orchestrator tự làm; đã có `.agents/plans/<ticket>.md` thì dùng file đó, mục "Chỉ lập kế hoạch" trong
+   `modes.md`): đọc ticket (Jira / Figma nếu có công cụ), viết kế hoạch: phần việc, file dự kiến đổi,
    tiêu chí nghiệm thu, và **kế hoạch chạy** (mục "Phụ thuộc" dưới đây) kèm rủi ro xung đột khi gộp.
    Worktree mới tạo từ HEAD: checkout hiện tại có thay đổi chưa commit liên quan → báo user commit trước, hoặc dùng
    `/dev review`. **Hỏi user duyệt** rồi mới sang bước 2 (duyệt luôn việc commit local ở bước 2 nếu kế hoạch có nối tiếp).

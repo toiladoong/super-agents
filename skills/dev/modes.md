@@ -5,6 +5,19 @@ Chỉ chạy bước 0, không code. Orchestrator tách câu hỏi, giao researc
 (`file:dòng`, link), các lựa chọn và lựa chọn đề xuất, điều chưa chắc. User muốn làm tiếp → chạy luồng đầy đủ từ bước 1
 với kết quả này.
 
+## Chỉ lập kế hoạch: `/dev plan [--here] [--research] <ticket hoặc mô tả>`
+Chạy bước 0 (nếu cần) và bước 1 rồi **dừng**: không tạo worker coder / reviewer / tester, không sửa code.
+- Kế hoạch theo đúng bước 1 (phần việc, file dự kiến đổi, tiêu chí nghiệm thu, kế hoạch chạy + phụ thuộc, rủi ro gộp), ghi
+  ra `.agents/plans/<ticket>.md` ở gốc repo (không có ticket thì tên ngắn gạch nối từ mô tả). Đầu file ghi: ticket, ngày,
+  nhánh / commit lúc lập, trạng thái `chờ duyệt`.
+- Hỏi user duyệt; user sửa thì sửa file. Duyệt xong đổi trạng thái thành `đã duyệt`. Không commit file khi user chưa bảo.
+- `--here`: không mở tab orchestrator, tab này làm (research bằng subagent nếu cần).
+- Báo user: chạy `/dev <ticket>` để làm theo kế hoạch này.
+
+**`/dev <ticket>` khi đã có `.agents/plans/<ticket>.md`:** đọc file thay cho bước 0–1; nhánh / commit đã đổi nhiều thì
+kiểm lại file dự kiến đổi còn đúng không. Trạng thái `đã duyệt` → hỏi user một câu xác nhận ("làm theo kế hoạch này?")
+rồi vào bước 2; `chờ duyệt` → duyệt như bước 1. Nghiệm thu xong ghi trạng thái `đã làm` vào file.
+
 ## Code đã có sẵn: `/dev review <ticket> [nhánh]`
 Bỏ bước Code, bắt đầu từ Review trên code đã viết.
 - **Chỗ chạy:** không có `nhánh` → thay đổi chưa commit ở checkout hiện tại, mọi worker dùng `--worktree current`

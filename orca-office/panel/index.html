@@ -105,6 +105,7 @@
         <li>Vai đọc từ tên tab <code>&lt;vai&gt; · &lt;phần việc&gt;</code> (lệnh <code>/super-agents:dev</code> tự đặt).</li>
         <li><b>⚙ Team</b>: mở <code>.agents/team.json</code> để chọn AI / model cho từng vai và luật riêng của repo.</li>
         <li><code>/super-agents:dev &lt;ticket&gt;</code> chạy cả nhóm: (research) → kế hoạch → <b>bạn duyệt</b> → code → review → test → nghiệm thu → <b>bạn duyệt</b></li>
+        <li><code>/super-agents:dev plan &lt;ticket&gt;</code> chỉ lập kế hoạch rồi dừng, lưu <code>.agents/plans/&lt;ticket&gt;.md</code>; chạy <code>/super-agents:dev &lt;ticket&gt;</code> sau để làm theo (thêm <code>--here</code> để lập ngay trong tab)</li>
         <li><code>/super-agents:review</code> chỉ review code đã viết (không tham số = thay đổi chưa commit)</li>
         <li><code>/super-agents:review --here</code> review gọn trong tab đang mở, không mở tab / worker mới; hỏi bạn chọn lỗi trước khi sửa</li>
         <li><code>/super-agents:dev status</code> xem worker nào đang làm / rảnh</li>

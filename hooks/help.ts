@@ -11,6 +11,7 @@ export const OFFICE_HELP = `**Cách đọc văn phòng**
 - Bàn đầu là phiên Claude Code này; các bàn sau là subagent / teammate nó gọi.
 - Muốn đúng màu áo: mô tả subagent bắt đầu bằng vai (**\`coder · sửa header\`**) hoặc dùng agent có tên vai (**\`web-tester\`**, **\`reviewer\`**).
 - **\`/super-agents:dev <ticket>\`** chạy cả nhóm agent qua Orca: (research) → kế hoạch → **bạn duyệt** → code → review → test → nghiệm thu → **bạn duyệt**
+- **\`/super-agents:dev plan <ticket>\`** chỉ lập kế hoạch rồi dừng, lưu **\`.agents/plans/<ticket>.md\`**; chạy **\`/super-agents:dev <ticket>\`** sau để làm theo
 - **\`/super-agents:review\`** chỉ review code đã viết (không tham số = thay đổi chưa commit)
 - **\`/super-agents:review --here\`** review gọn trong tab này bằng subagent, không mở tab / worker mới; hỏi bạn chọn lỗi trước khi sửa
 - **\`/super-agents:dev status\`** xem worker nào đang làm / rảnh
