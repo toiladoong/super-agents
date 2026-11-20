@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: var(--orca-background);
+        color: var(--orca-foreground);
+        font: 12px system-ui, sans-serif;
+      }
+      #office {
+        display: block;
+        width: 100%;
+        image-rendering: pixelated;
+      }
+      #tip {
+        position: fixed;
+        pointer-events: none;
+        display: none;
+        max-width: 240px;
+        padding: 6px 8px;
+        border-radius: 4px;
+        background: rgba(20, 20, 28, 0.92);
+        color: #f0f0f0;
+        line-height: 1.4;
+        white-space: pre-line;
+      }
+      #open-team {
+        position: absolute;
+        top: 6px;
+        right: 48px;
+        padding: 2px 8px;
+        border: 1px solid rgba(236, 239, 244, 0.5);
+        border-radius: 4px;
+        background: rgba(46, 52, 64, 0.85);
+        color: #eceff4;
+        font: inherit;
+        cursor: pointer;
+      }
+      #open-team:hover {
+        background: rgba(76, 86, 106, 0.95);
+      }
+      #help {
+        margin: 4px 10px 12px;
+        overflow-wrap: anywhere;
+        line-height: 1.5;
+      }
+      #help summary {
+        cursor: pointer;
+        opacity: 0.8;
+      }
+      /* Commands as chips: monospace, accent colour, tinted box, so they stand apart from the prose. */
+      #help code {
+        padding: 1px 5px;
+        border: 1px solid rgba(136, 192, 208, 0.45);
+        border-radius: 4px;
+        background: rgba(136, 192, 208, 0.16);
+        color: #8fd3e8;
+        font: 600 12px ui-monospace, Consolas, monospace;
+        white-space: nowrap;
+      }
+      html.light #help code {
+        border-color: rgba(29, 78, 137, 0.35);
+        background: rgba(29, 78, 137, 0.08);
+        color: #1d4e89;
+      }
+      #help ul {
+        margin: 6px 0;
+        padding-left: 18px;
+      }
+      #status {
+        padding: 6px 10px;
+        opacity: 0.7;
+      }
+      /* A reply to a click (open a tab, open team.json) must be seen: show it as a notice. */
+      #status:not(:empty) {
+        margin: 6px 10px;
+        border-left: 3px solid #88c0d0;
+        border-radius: 3px;
+        background: rgba(136, 192, 208, 0.15);
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="open-team" title="Mở .agents/team.json của workspace đang mở">⚙ Team</button>
+    <canvas id="office"></canvas>
+    <div id="status"></div>
+    <details id="help" open>
+      <summary>Hướng dẫn</summary>
+      <ul>
+        <li>Gõ phím, màn hình chạy code: <b>đang làm</b></li>
+        <li>Giơ tay, bong bóng "!" đỏ: <b>cần bạn</b> (agent đang hỏi duyệt hoặc chờ trả lời)</li>
+        <li>Bong bóng "…" và cốc cà phê: <b>đang chờ</b></li>
+        <li>Dấu "✓", ngả ghế: <b>xong</b>, rời bàn sau 10 phút</li>
+        <li>Áo theo vai, chữ trên ngực: <b>O</b> tím orchestrator · <b>R</b> xanh dương researcher · <b>C</b> xanh lá coder · <b>V</b> cam reviewer · <b>S</b> vàng skeptic · <b>T</b> hồng tester · áo xám không chữ: chưa rõ vai</li>
+        <li>Màu tóc theo AI: cam Claude · đen Codex · xanh Antigravity · tím Cursor · nâu OpenCode</li>
+        <li>Rê chuột lên bàn: tên, AI, vai, trạng thái, thời gian</li>
+      </ul>
+      <ul>
+        <li>Hiện agent của mọi workspace trong Orca, tên bàn là tên phiên (như ở sidebar Orca); cập nhật mỗi 3 giây.</li>
+        <li>Vai đọc từ tên tab <code>&lt;vai&gt; · &lt;phần việc&gt;</code> (lệnh <code>/super-agents:dev</code> tự đặt).</li>
+        <li><b>⚙ Team</b>: mở <code>.agents/team.json</code> để chọn AI / model cho từng vai và luật riêng của repo.</li>
+        <li><code>/super-agents:dev &lt;ticket&gt;</code> chạy cả nhóm: research → code → review → test</li>
+        <li><code>/super-agents:review</code> chỉ review code đã viết (không tham số = thay đổi chưa commit)</li>
+        <li><code>/super-agents:review --here</code> review gọn trong tab đang mở, không mở tab / worker mới; hỏi bạn chọn lỗi trước khi sửa</li>
+        <li><code>/super-agents:dev status</code> xem worker nào đang làm / rảnh</li>
+      </ul>
+    </details>
+    <div id="tip"></div>
+    <script src="agents.js"></script>
+    <script src="sprites.js"></script>
+    <script src="office.js"></script>
+  </body>
+</html>

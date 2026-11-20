@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        margin: 0;
+        padding: 16px;
+        background: var(--orca-background);
+        color: var(--orca-foreground);
+        font: 13px system-ui, sans-serif;
+      }
+      h2 {
+        margin: 18px 0 8px;
+        font-size: 14px;
+      }
+      .hint {
+        opacity: 0.65;
+        margin: 4px 0 10px;
+      }
+      #error {
+        display: none;
+        padding: 8px 10px;
+        border-radius: 4px;
+        background: rgba(191, 97, 106, 0.2);
+      }
+      .role {
+        display: grid;
+        grid-template-columns: 48px 110px 130px 120px 1fr;
+        gap: 8px;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid rgba(127, 127, 127, 0.2);
+      }
+      .role canvas {
+        width: 48px;
+        height: 48px;
+        image-rendering: pixelated;
+        border-radius: 4px;
+        background: #c8b28e;
+      }
+      .role b {
+        text-transform: capitalize;
+      }
+      input,
+      select,
+      textarea {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 5px 7px;
+        border: 1px solid rgba(127, 127, 127, 0.35);
+        border-radius: 4px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+      }
+      select option {
+        background: var(--orca-background);
+        color: var(--orca-foreground);
+      }
+      .note {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 6px;
+      }
+      textarea {
+        resize: vertical;
+        min-height: 34px;
+      }
+      button {
+        padding: 4px 10px;
+        border: 1px solid rgba(127, 127, 127, 0.35);
+        border-radius: 4px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+      button:hover {
+        background: rgba(127, 127, 127, 0.15);
+      }
+      @media (max-width: 640px) {
+        .role {
+          grid-template-columns: 48px 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="error"></div>
+    <h2>Vai trò</h2>
+    <p class="hint">Mỗi vai chạy bằng AI nào, model nào. Bỏ trống model = model mặc định của AI; bỏ trống file vai = vai mặc định của plugin.</p>
+    <div id="roles"></div>
+    <h2>Luật riêng của repo (notes)</h2>
+    <p class="hint">Orchestrator đọc và chép phần liên quan vào việc giao cho từng worker.</p>
+    <div id="notes"></div>
+    <button id="add-note">+ Thêm luật</button>
+    <script src="../panel/sprites.js"></script>
+    <script src="editor.js"></script>
+  </body>
+</html>

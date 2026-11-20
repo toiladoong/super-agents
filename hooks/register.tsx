@@ -1,0 +1,150 @@
+import { atom, read, update } from 'claude-code'
+import type { EngineInterface, Register, Timer } from 'claude-code'
+
+import type { OfficeView } from '../types'
+import { MAIN_KEY, newActivity, officeAgents } from './agents'
+import { OFFICE_HELP } from './help'
+import { DENY_REASON, EDIT_TOOLS, afterPrompt, afterSkillPrompt, guardStatus } from './review-guard'
+import type { ReviewGuard } from './review-guard'
+import { elapsed, officeSvg } from './office-svg'
+
+const PANE = 'agent-office'
+// $.agent.list is in-process and cheap; 2 s keeps the desks live while the pane is open.
+const POLL_MS = 2000
+const STATE_TEXT = { working: 'đang làm', blocked: 'CẦN BẠN', waiting: 'đang chờ', done: 'xong' } as const
+
+const showHelp = atom({ plugin: 'super-agents', key: 'showHelp' } as const, true)
+const reviewGuard = atom({ plugin: 'super-agents', key: 'reviewGuard' } as const, { isActive: false, isTurnAllowed: false })
+const view = atom({ plugin: 'super-agents', key: 'view' } as const, { agents: [], error: null, now: 0 })
+
+// What the hooks saw of each loop; module memory, so a reload starts it over (desks reappear on the next refresh).
+const activity = newActivity()
+// Polls only while the pane is open; a reload starts the module over, and the next draw of the pane starts it again.
+let pollTimer: Timer | undefined
+
+const loopKey = (agentId: string | undefined) => agentId ?? MAIN_KEY
+
+async function refresh($: EngineInterface): Promise<void> {
+  const now = await $.clock.now()
+  let next: OfficeView
+  try {
+    next = { agents: officeAgents(await $.agent.list(), activity, now), error: null, now }
+  } catch (error) {
+    next = { agents: [], error: `Không đọc được danh sách agent: ${String(error).slice(0, 200)}`, now }
+  }
+  // Redraw only when something a reader sees changed (elapsed times move by the minute).
+  const minute = (value: OfficeView) => JSON.stringify({ ...value, now: Math.floor(value.now / 60000) })
+  await update($, view, (previous) => (minute(previous) === minute(next) ? previous : next))
+}
+
+async function setReviewGuard($: EngineInterface, next: ReviewGuard): Promise<void> {
+  await update($, reviewGuard, () => next)
+  await $.ui.status(guardStatus(next))
+}
+
+export const register: Register = (on) => {
+  // review --here: lock edits until the person answers "sửa …" (rules in review-guard.ts).
+  on('skill.prompt', async ($, e, next) => {
+    const state = await read($, reviewGuard)
+    const nextState = afterSkillPrompt(state, e.skill, e.text)
+    if (nextState !== state) await setReviewGuard($, nextState)
+    return next(e)
+  })
+
+  on('prompt.submit', async ($, e, next) => {
+    const state = await read($, reviewGuard)
+    const nextState = afterPrompt(state, e.text)
+    if (nextState !== state) await setReviewGuard($, nextState)
+    return next(e)
+  })
+
+  on('session.start', async ($, e, next) => {
+    await $.command.register({ name: 'office', description: 'Mở văn phòng pixel: phiên Claude Code này và các subagent của nó' })
+    return next(e)
+  })
+
+  on('command.run', { command: 'office' }, async ($) => {
+    await $.ui.open({ id: PANE, title: 'Agent Office' })
+    await refresh($)
+    return { text: 'Đã mở Agent Office.' }
+  })
+
+  // turn.start carries no agentId: it is the main loop's turn.
+  on('turn.start', async ($, e, next) => {
+    activity.mainState = 'working'
+    return next(e)
+  })
+
+  on('turn.complete', async ($, e, next) => {
+    if (!e.agentId) activity.mainState = 'waiting'
+    activity.asking.delete(loopKey(e.agentId))
+    const guardState = await read($, reviewGuard)
+    if (!e.agentId && guardState.isActive && guardState.isTurnAllowed) await setReviewGuard($, { isActive: true, isTurnAllowed: false })
+    return next(e)
+  })
+
+  // An `ask` puts the call to the person: that loop raises its hand until the call runs or the turn ends.
+  // Also the review --here guard: if this hook fails before deciding, the call is refused rather than let through.
+  on('tool.check', async ($, e, next) => {
+    if (EDIT_TOOLS.has(e.tool)) {
+      const guardState = await read($, reviewGuard)
+      if (guardState.isActive && !guardState.isTurnAllowed) return { decision: 'deny' as const, reason: DENY_REASON }
+    }
+    const result = await next(e)
+    if (result.decision === 'ask') activity.asking.add(loopKey(e.agentId))
+    return result
+  }).catch(($, e, next) => (next.called ? next(e) : { decision: 'deny' as const, reason: 'super-agents: không kiểm tra được khoá review, tạm không cho chạy.' }))
+
+  on('tool.call', async ($, e, next) => {
+    const key = loopKey(e.agentId)
+    activity.asking.delete(key)
+    activity.lastTool.set(key, e.tool)
+    return next(e)
+  })
+
+  // Closing must never be blocked by this hook failing.
+  on('ui.close', { id: PANE }, async ($, e, next) => {
+    pollTimer?.cancel()
+    pollTimer = undefined
+    return next(e)
+  }).catch(($, e, next) => next(e))
+
+  on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
+    // Started here, not on /office: a plugin reload drops timers while the pane stays open, and the pane is drawn again.
+    pollTimer ??= $.clock.every(POLL_MS, () => void refresh($))
+    const office = await read($, view)
+    const isHelpShown = await read($, showHelp)
+    const handleToggleHelp = () => void update($, showHelp, (shown) => !shown)
+    if (e.surface === 'terminal') {
+      const { Box, Button, Markdown, Text } = $.ui.resolve(e)
+      return (
+        <Box flexDirection="column">
+          {office.error && <Text color="red">{office.error}</Text>}
+          {office.agents.map((agent) => (
+            <Text dimColor={agent.state === 'done'}>
+              {agent.state === 'blocked' ? '!' : '•'} {agent.role.padEnd(12)} {STATE_TEXT[agent.state].padEnd(9)}{' '}
+              {elapsed(agent.since, office.now).padEnd(6)} {agent.title}
+            </Text>
+          ))}
+          <Button key="help" onPress={handleToggleHelp}>{isHelpShown ? 'Ẩn hướng dẫn' : 'Hướng dẫn'}</Button>
+          {isHelpShown && <Markdown text={OFFICE_HELP} />}
+        </Box>
+      )
+    }
+    const { Box, Button, Markdown, Svg, Text } = $.ui.resolve(e)
+    // About 24 cells hold one desk at the drawn scale; 1 to 4 desks a row.
+    const columns = Math.min(4, Math.max(1, Math.floor((e.props.bodyColumns ?? 48) / 24)))
+    return (
+      <Box flexDirection="column">
+        {office.error && <Text color="red">{office.error}</Text>}
+        <Svg
+          source={officeSvg(office.agents, columns, office.now)}
+          alt={`${office.agents.length} agent: ${office.agents.map((agent) => `${agent.role} ${STATE_TEXT[agent.state]}`).join(', ')}`}
+          isInteractive
+        />
+          <Button key="help" onPress={handleToggleHelp}>{isHelpShown ? 'Ẩn hướng dẫn' : 'Hướng dẫn'}</Button>
+          {isHelpShown && <Markdown text={OFFICE_HELP} />}
+      </Box>
+    )
+  })
+}

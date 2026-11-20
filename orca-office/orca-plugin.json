@@ -1,0 +1,46 @@
+{
+  "manifestVersion": 2,
+  "id": "super-agents-office",
+  "name": "Agent Office",
+  "version": "0.5.6",
+  "description": "Văn phòng pixel cho các agent đang chạy trong Orca, và trình sửa trực quan team.json của super-agents (vai, AI, model, luật repo).",
+  "engines": {
+    "orca": ">=1.4.248"
+  },
+  "execution": "trusted-worker",
+  "pluginApi": 1,
+  "contributes": {
+    "panels": [
+      {
+        "id": "office",
+        "title": "Agent Office",
+        "icon": "bot",
+        "entry": "panel/index.html"
+      }
+    ],
+    "customEditors": [
+      {
+        "id": "team",
+        "title": "Team",
+        "filenames": [
+          "team.json",
+          "team.default.json"
+        ],
+        "entry": "team-editor/index.html",
+        "priority": "option"
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "kind": "agent:read"
+    },
+    {
+      "kind": "workspace:read"
+    },
+    {
+      "kind": "workspace:write"
+    }
+  ],
+  "main": "worker/main.ts"
+}

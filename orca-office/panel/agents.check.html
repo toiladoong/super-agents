@@ -1,0 +1,43 @@
+<!doctype html>
+<!-- Self-check for agents.js: open in a browser (or headless Chrome with --dump-dom); the page title says PASS or FAIL. -->
+<html>
+  <head><meta charset="utf-8" /><title>running</title></head>
+  <body>
+    <pre id="out"></pre>
+    <script>
+      let onStatusChanged
+      let requests = 0
+      const now = Date.now()
+      const snapshots = [
+        [
+          { key: 'b', title: 'reviewer · sửa lỗi coder A', agent: 'codex', state: 'working', stateStartedAt: now, tool: 'Read', workspace: 'wt' },
+          { key: 'a', title: 'Phương án tạo agent', agent: 'claude', state: 'waiting', stateStartedAt: now, tool: null, workspace: 'wt' },
+          { key: 'c', title: 'old', agent: 'claude', state: 'done', stateStartedAt: now - 11 * 60 * 1000, tool: null, workspace: 'wt' }
+        ],
+        [{ key: 'a', title: 'Phương án tạo agent', agent: 'claude', state: 'blocked', stateStartedAt: now, tool: 'Bash', workspace: 'wt' }]
+      ]
+      window.orca = {
+        plugin: { request: async (name) => (name === 'agents.snapshot' ? { agents: snapshots[Math.min(requests++, 1)] } : null) },
+        on: (event, handler) => (onStatusChanged = handler)
+      }
+    </script>
+    <script src="agents.js"></script>
+    <script>
+      ;(async () => {
+        const failures = []
+        const check = (ok, message) => ok || failures.push(message)
+        await agentStore.load()
+        const first = agentStore.list()
+        check(first.map((agent) => agent.key).join() === 'a,b', 'desks are sorted, and a desk done for over 10 minutes is cleared')
+        check(first[0].title === 'Phương án tạo agent' && first[0].agent === 'claude', 'the session name and AI come from the worker')
+        check(first[1].role === 'reviewer', 'role comes from the leading word only')
+        onStatusChanged({ state: 'blocked' })
+        await new Promise((resolve) => setTimeout(resolve, 20))
+        const second = agentStore.list()
+        check(second.length === 1 && second[0].state === 'blocked' && second[0].tool === 'Bash', 'a status change refreshes from the worker')
+        document.getElementById('out').textContent = failures.length ? failures.join('\n') : 'all checks passed'
+        document.title = failures.length ? 'FAIL' : 'PASS'
+      })()
+    </script>
+  </body>
+</html>

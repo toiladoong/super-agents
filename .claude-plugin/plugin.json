@@ -1,0 +1,16 @@
+{
+  "name": "super-agents",
+  "version": "0.7.0",
+  "description": "Nhóm agent trong Orca: orchestrator điều phối researcher, coder, reviewer, tester cho một ticket; /office mở văn phòng pixel các agent đang chạy.",
+  "author": {
+    "name": "Doong"
+  },
+  "keywords": [
+    "orca",
+    "multi-agent",
+    "orchestration"
+  ],
+  "types": "./types/index.d.ts",
+  "homepage": "https://github.com/toiladoong/super-agents",
+  "repository": "https://github.com/toiladoong/super-agents"
+}

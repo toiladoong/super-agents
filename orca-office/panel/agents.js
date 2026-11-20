@@ -1,0 +1,56 @@
+// Agent state from Orca, read by the plugin's worker through `orca worktree ps` (every workspace, with each session's
+// name, AI and tool): refreshed every few seconds while the panel shows, and at once when an agent changes state.
+// Exposes window.agentStore = { list(), load(), onChange(fn) }.
+;(function () {
+  // A finished agent stays at its desk this long, then leaves the office.
+  const DONE_LINGER_MS = 10 * 60 * 1000
+  const POLL_MS = 3000
+  // Tabs are named "<role> · <part>" by the dev skill; only the leading word counts.
+  const ROLE_PATTERN = /^(orchestrator|researcher|coder|reviewer|skeptic|tester)\b/i
+
+  let agents = []
+  let isRefreshing = false
+  const listeners = []
+
+  function roleOf(title) {
+    const match = ROLE_PATTERN.exec(title || '')
+    return match ? match[1].toLowerCase() : 'agent'
+  }
+
+  function notify() {
+    listeners.forEach((listener) => listener())
+  }
+
+  function list() {
+    const now = Date.now()
+    return agents.filter((agent) => agent.state !== 'done' || now - agent.stateStartedAt < DONE_LINGER_MS)
+  }
+
+  // One request at a time: a slow Orca must not pile up `orca` processes in the worker.
+  async function refresh() {
+    if (isRefreshing || document.hidden) return
+    isRefreshing = true
+    try {
+      const snapshot = await orca.plugin.request('agents.snapshot')
+      agents = snapshot.agents
+        .map((agent) => ({ ...agent, role: roleOf(agent.title) }))
+        .sort((a, b) => a.key.localeCompare(b.key))
+      notify()
+    } finally {
+      isRefreshing = false
+    }
+  }
+
+  async function load() {
+    await refresh()
+    setInterval(() => void refresh().catch(() => {}), POLL_MS)
+    orca.on('agent.status.changed', () => void refresh().catch(() => {}))
+  }
+
+  window.agentStore = {
+    list,
+    load,
+    roleOf,
+    onChange: (listener) => listeners.push(listener)
+  }
+})()

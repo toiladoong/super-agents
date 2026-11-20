@@ -1,0 +1,72 @@
+<!doctype html>
+<!-- Self-check for editor.js: open in a browser (or headless Chrome with --dump-dom); the page title says PASS or FAIL. -->
+<html>
+  <head><meta charset="utf-8" /><title>running</title></head>
+  <body>
+    <div id="error"></div>
+    <div id="roles"></div>
+    <div id="notes"></div>
+    <button id="add-note"></button>
+    <pre id="out"></pre>
+    <script>
+      const original = '{\n  "_comment": "keep me",\n  "roles": { "coder": { "agent": "claude", "model": "opus" } },\n  "notes": ["a"]\n}\n'
+      let written = original
+      window.orca = {
+        document: {
+          session: async ({ decode, encode }) => {
+            const session = {
+              value: decode({ kind: 'text', text: original }),
+              readOnly: false,
+              change(next) {
+                session.value = next
+                written = encode(next).text
+              },
+              onReplace() {}
+            }
+            return session
+          }
+        }
+      }
+    </script>
+    <script src="../panel/sprites.js"></script>
+    <script src="editor.js"></script>
+    <script>
+      setTimeout(() => {
+        const failures = []
+        const check = (ok, message) => ok || failures.push(message)
+        const coderRow = [...document.querySelectorAll('.role')].find((row) => row.querySelector('b').textContent === 'coder')
+        check(document.querySelectorAll('.role').length === 5, 'all five roles are listed')
+        const agentInput = coderRow.querySelectorAll('select')[0]
+        check([...agentInput.options].map((option) => option.value).join() === 'claude,codex,antigravity,cursor,opencode', 'agent is a select of known AIs')
+        check([...coderRow.querySelectorAll('select')[1].options].map((option) => option.value).join() === ',opus,sonnet,haiku,__custom__', 'Claude models are offered, plus a custom entry')
+        agentInput.value = 'codex'
+        agentInput.dispatchEvent(new Event('change'))
+        const team = JSON.parse(written)
+        check(team.roles.coder.agent === 'codex', 'agent change is written')
+        check(!('model' in team.roles.coder), 'a Claude model is dropped when the agent leaves Claude')
+        check(team._comment === 'keep me', 'keys the editor does not show are kept')
+        const roleRow = (name) => [...document.querySelectorAll('.role')].find((row) => row.querySelector('b').textContent === name)
+        const codexModel = roleRow('coder').querySelectorAll('select')[1]
+        check([...codexModel.options].some((option) => option.value === 'gpt-6.2-sol'), 'Codex models are offered after switching AI')
+        codexModel.value = '__custom__'
+        codexModel.dispatchEvent(new Event('change'))
+        const customInput = roleRow('coder').querySelector('input')
+        customInput.value = 'gpt-9-test'
+        customInput.dispatchEvent(new Event('change'))
+        check(JSON.parse(written).roles.coder.model === 'gpt-9-test', 'a custom model name can be typed')
+        check(roleRow('coder').querySelectorAll('select')[1].value === 'gpt-9-test', 'a custom model shows as its own option')
+        const testerAgent = roleRow('tester').querySelectorAll('select')[0]
+        testerAgent.value = 'opencode'
+        testerAgent.dispatchEvent(new Event('change'))
+        check(roleRow('tester').querySelectorAll('select')[1].value === '', 'switching AI resets the model to default')
+        document.getElementById('add-note').click()
+        check(JSON.parse(written).notes.length === 2, 'a note can be added')
+        document.querySelector('.note button').click()
+        check(JSON.stringify(JSON.parse(written).notes) === '[""]', 'a note can be removed')
+        check(written.endsWith('}\n') && written.includes('\n  "roles"'), 'file is written as 2-space JSON')
+        document.getElementById('out').textContent = failures.length ? failures.join('\n') : 'all checks passed'
+        document.title = failures.length ? 'FAIL' : 'PASS'
+      }, 50)
+    </script>
+  </body>
+</html>

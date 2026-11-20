@@ -1,0 +1,9 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "super-agents",
+  "description": "Nhóm agent trong Orca: orchestrator điều phối researcher, coder, reviewer, tester.",
+  "owner": { "name": "Doong" },
+  "plugins": [
+    { "name": "super-agents", "description": "Lệnh /super-agents:dev — research → code → review → test bằng worker Orca.", "source": "./", "category": "productivity" }
+  ]
+}
