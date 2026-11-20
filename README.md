@@ -1,5 +1,7 @@
 # super-agents
 
+English: [README.en.md](README.en.md)
+
 Nhóm agent chạy trong Orca: **orchestrator** điều phối **researcher**, **coder**, **reviewer**, **tester**
 cho một ticket. Mỗi vai chạy bằng AI / model nào là cấu hình theo repo (mặc định Claude).
 
@@ -32,6 +34,12 @@ AI khác (Codex, opencode...) và panel Orca cần mã ở máy: `git clone http
 
 Cần: Orca đang chạy, `orca` CLI, skill `orchestration` của Orca (`orca skills install --skill orchestration`).
 
+## Ngôn ngữ
+Mặc định **tiếng Việt**. Đặt `"language": "en"` trong `.agents/team.json` của repo (hoặc chọn trong editor Team) để AI
+trả lời, viết kế hoạch và báo cáo bằng tiếng Anh; pane `/office` cũng theo `language` này. Panel Agent Office và editor
+Team của Orca theo cài đặt Orca Settings → plugin Agent Office → **Ngôn ngữ**. Khi review, câu trả lời tiếng Việt và
+tiếng Anh đều được hiểu ("sửa 1, 3" / "fix 1, 3", "không sửa" / "skip", "xong review" / "done review").
+
 ## Dùng
 | Lệnh (Claude Code) | Làm gì |
 |---|---|
@@ -42,10 +50,10 @@ Cần: Orca đang chạy, `orca` CLI, skill `orchestration` của Orca (`orca sk
 | `/super-agents:review [ticket] [nhánh]` | Lối tắt của dòng trên: chỉ review (không tham số = thay đổi chưa commit) |
 | `/super-agents:review here [ticket]` | Review gọn trong tab đang mở bằng subagent Claude, không mở tab / worker Orca. **Khoá sửa file** (thanh trạng thái 🔒) tới khi bạn trả lời "sửa 1, 3" / "sửa hết lỗi chặn"; mở đúng lượt đó rồi khoá lại |
 | `/super-agents:review off` | Tắt khoá bằng tay (hoặc nói "xong review"). Thường không cần: khoá tự tắt khi review xong (dòng `✅ Review xong`), khi bạn trả lời "không sửa" / "bỏ qua", hoặc khi bạn gõ lệnh `/…` khác |
+| `/super-agents:dev status` | Bảng worker đang làm / rảnh / chờ |
 
 Trong lúc review `here`, gợi ý sau mỗi lượt (khung chat Orca và khung prompt Claude Code) là câu trả lời tiếp theo: xong lượt review là **"sửa hết lỗi chặn"**, xong lượt sửa là
 **"xong review"**; bấm **Tab** (hoặc →) để lấy, sửa lại nếu cần (vd. "sửa 1, 3") rồi gửi.
-| `/super-agents:dev status` | Bảng worker đang làm / rảnh / chờ |
 
 Orchestrator dừng hỏi user ở 2 chỗ: duyệt spec, và nghiệm thu trước khi gộp / commit. Worker không commit.
 

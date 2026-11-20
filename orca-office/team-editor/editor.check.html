@@ -4,7 +4,10 @@
   <head><meta charset="utf-8" /><title>running</title></head>
   <body>
     <div id="error"></div>
+    <h2 id="language-title"></h2><p id="language-hint"></p><div id="language"></div>
+    <h2 id="roles-title"></h2><p id="roles-hint"></p>
     <div id="roles"></div>
+    <h2 id="notes-title"></h2><p id="notes-hint"></p>
     <div id="notes"></div>
     <button id="add-note"></button>
     <pre id="out"></pre>
@@ -28,6 +31,7 @@
         }
       }
     </script>
+    <script src="../shared/i18n.js"></script>
     <script src="../panel/sprites.js"></script>
     <script src="editor.js"></script>
     <script>
@@ -59,6 +63,12 @@
         testerAgent.value = 'opencode'
         testerAgent.dispatchEvent(new Event('change'))
         check(roleRow('tester').querySelectorAll('select')[1].value === '', 'switching AI resets the model to default')
+        const languageSelect = document.querySelector('#language select')
+        check(languageSelect.value === 'vi', 'reply language defaults to Vietnamese')
+        languageSelect.value = 'en'
+        languageSelect.dispatchEvent(new Event('change'))
+        check(JSON.parse(written).language === 'en', 'reply language is written to team.json')
+        check(document.getElementById('roles-title').textContent === 'Vai trò', 'editor words default to Vietnamese')
         document.getElementById('add-note').click()
         check(JSON.parse(written).notes.length === 2, 'a note can be added')
         document.querySelector('.note button').click()
@@ -66,7 +76,7 @@
         check(written.endsWith('}\n') && written.includes('\n  "roles"'), 'file is written as 2-space JSON')
         document.getElementById('out').textContent = failures.length ? failures.join('\n') : 'all checks passed'
         document.title = failures.length ? 'FAIL' : 'PASS'
-      }, 50)
+      }, 300)
     </script>
   </body>
 </html>

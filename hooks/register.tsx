@@ -4,6 +4,8 @@ import type { EngineInterface, Register, Timer } from 'claude-code'
 import type { OfficeView } from '../types'
 import { MAIN_KEY, newActivity, officeAgents } from './agents'
 import { OFFICE_HELP } from './help'
+import { TEAM_FILE, TEXT, languageOf } from './i18n'
+import type { Lang } from './i18n'
 import { DENY_REASON, EDIT_TOOLS, afterPrompt, afterReviewCommand, afterTurn, guardStatus, suggestionAfterTurn } from './review-guard'
 import type { ReviewGuard } from './review-guard'
 import { elapsed, officeSvg } from './office-svg'
@@ -11,13 +13,12 @@ import { elapsed, officeSvg } from './office-svg'
 const PANE = 'agent-office'
 // $.agent.list is in-process and cheap; 2 s keeps the desks live while the pane is open.
 const POLL_MS = 2000
-const STATE_TEXT = { working: 'đang làm', blocked: 'CẦN BẠN', waiting: 'đang chờ', done: 'xong' } as const
 
 const showHelp = atom({ plugin: 'super-agents', key: 'showHelp' } as const, true)
 // The answer to propose after the last turn while review --here runs; null otherwise.
 const reviewSuggestion = atom({ plugin: 'super-agents', key: 'reviewSuggestion' } as const, null as string | null)
 const reviewGuard = atom({ plugin: 'super-agents', key: 'reviewGuard' } as const, { isActive: false, isTurnAllowed: false })
-const view = atom({ plugin: 'super-agents', key: 'view' } as const, { agents: [], error: null, now: 0 })
+const view = atom({ plugin: 'super-agents', key: 'view' } as const, { agents: [], error: null, now: 0, lang: 'vi' as Lang })
 
 // What the hooks saw of each loop; module memory, so a reload starts it over (desks reappear on the next refresh).
 const activity = newActivity()
@@ -26,13 +27,19 @@ let pollTimer: Timer | undefined
 
 const loopKey = (agentId: string | undefined) => agentId ?? MAIN_KEY
 
+// The repo's `language` in .agents/team.json (Vietnamese when there is none).
+async function readLanguage($: EngineInterface): Promise<Lang> {
+  return languageOf(await $.fs.read(TEAM_FILE).catch(() => null))
+}
+
 async function refresh($: EngineInterface): Promise<void> {
   const now = await $.clock.now()
+  const lang = await readLanguage($)
   let next: OfficeView
   try {
-    next = { agents: officeAgents(await $.agent.list(), activity, now), error: null, now }
+    next = { agents: officeAgents(await $.agent.list(), activity, now, lang), error: null, now, lang }
   } catch (error) {
-    next = { agents: [], error: `Không đọc được danh sách agent: ${String(error).slice(0, 200)}`, now }
+    next = { agents: [], error: `${TEXT[lang].readFailed}${String(error).slice(0, 200)}`, now, lang }
   }
   // Redraw only when something a reader sees changed (elapsed times move by the minute).
   const minute = (value: OfficeView) => JSON.stringify({ ...value, now: Math.floor(value.now / 60000) })
@@ -41,7 +48,7 @@ async function refresh($: EngineInterface): Promise<void> {
 
 async function setReviewGuard($: EngineInterface, next: ReviewGuard): Promise<void> {
   await update($, reviewGuard, () => next)
-  await $.ui.status(guardStatus(next))
+  await $.ui.status(guardStatus(next, await readLanguage($)))
 }
 
 export const register: Register = (on) => {
@@ -67,7 +74,7 @@ export const register: Register = (on) => {
   on('command.run', { command: 'office' }, async ($) => {
     await $.ui.open({ id: PANE, title: 'Agent Office' })
     await refresh($)
-    return { text: 'Đã mở Agent Office.' }
+    return { text: TEXT[await readLanguage($)].opened }
   })
 
   // turn.start carries no agentId: it is the main loop's turn.
@@ -83,7 +90,7 @@ export const register: Register = (on) => {
       const guardState = await read($, reviewGuard)
       const nextGuard = afterTurn(guardState, e.answer)
       if (nextGuard !== guardState) await setReviewGuard($, nextGuard)
-      const suggestion = suggestionAfterTurn(guardState, e.answer)
+      const suggestion = suggestionAfterTurn(guardState, e.answer, await readLanguage($))
       await update($, reviewSuggestion, () => suggestion)
       // The box takes a suggestion only once the turn has ended, so offer it a moment after.
       if (suggestion) $.clock.after(400, () => void $.prompt.suggest({ text: suggestion }))
@@ -136,12 +143,12 @@ export const register: Register = (on) => {
           {office.error && <Text color="red">{office.error}</Text>}
           {office.agents.map((agent) => (
             <Text dimColor={agent.state === 'done'}>
-              {agent.state === 'blocked' ? '!' : '•'} {agent.role.padEnd(12)} {STATE_TEXT[agent.state].padEnd(9)}{' '}
+              {agent.state === 'blocked' ? '!' : '•'} {agent.role.padEnd(12)} {TEXT[office.lang].states[agent.state].padEnd(9)}{' '}
               {elapsed(agent.since, office.now).padEnd(6)} {agent.title}
             </Text>
           ))}
-          <Button key="help" onPress={handleToggleHelp}>{isHelpShown ? 'Ẩn hướng dẫn' : 'Hướng dẫn'}</Button>
-          {isHelpShown && <Markdown text={OFFICE_HELP} />}
+          <Button key="help" onPress={handleToggleHelp}>{isHelpShown ? TEXT[office.lang].hideHelp : TEXT[office.lang].showHelp}</Button>
+          {isHelpShown && <Markdown text={OFFICE_HELP[office.lang]} />}
         </Box>
       )
     }
@@ -152,12 +159,12 @@ export const register: Register = (on) => {
       <Box flexDirection="column">
         {office.error && <Text color="red">{office.error}</Text>}
         <Svg
-          source={officeSvg(office.agents, columns, office.now)}
-          alt={`${office.agents.length} agent: ${office.agents.map((agent) => `${agent.role} ${STATE_TEXT[agent.state]}`).join(', ')}`}
+          source={officeSvg(office.agents, columns, office.now, office.lang)}
+          alt={`${office.agents.length} agent: ${office.agents.map((agent) => `${agent.role} ${TEXT[office.lang].states[agent.state]}`).join(', ')}`}
           isInteractive
         />
-          <Button key="help" onPress={handleToggleHelp}>{isHelpShown ? 'Ẩn hướng dẫn' : 'Hướng dẫn'}</Button>
-          {isHelpShown && <Markdown text={OFFICE_HELP} />}
+          <Button key="help" onPress={handleToggleHelp}>{isHelpShown ? TEXT[office.lang].hideHelp : TEXT[office.lang].showHelp}</Button>
+          {isHelpShown && <Markdown text={OFFICE_HELP[office.lang]} />}
       </Box>
     )
   })

@@ -3,7 +3,7 @@
   // 6 frames a second is enough for pixel animation and keeps the panel cheap.
   const FRAME_MS = 166
   const LABEL_H = 14
-  const STATE_TEXT = { working: 'đang làm', blocked: 'cần bạn', waiting: 'đang chờ', done: 'xong' }
+  const i18n = window.officeI18n
 
   const canvas = document.getElementById('office')
   const ctx = canvas.getContext('2d')
@@ -16,7 +16,7 @@
 
   function elapsed(since) {
     const minutes = Math.floor((Date.now() - since) / 60000)
-    return minutes < 60 ? `${minutes}p` : `${Math.floor(minutes / 60)}g${minutes % 60}p`
+    return i18n.t.elapsed(minutes)
   }
 
   function shortTitle(agent) {
@@ -73,7 +73,7 @@
       const labelY = (y + CELL_H + 10) * layout.scale
       ctx.fillText(`${shortTitle(agent)} · ${elapsed(agent.stateStartedAt)}`, centerX, labelY)
     })
-    status.textContent = layout.agents.length ? '' : 'Chưa có agent nào đang chạy. Agent mới sẽ ngồi vào bàn khi đổi trạng thái.'
+    status.textContent = layout.agents.length ? '' : i18n.t.noAgents
   }
 
   function handleFrame() {
@@ -105,9 +105,9 @@
       return
     }
     tip.textContent = [
-      agent.title || '(không tên)',
-      `${agent.agent || 'agent'} · vai ${agent.role}${agent.workspace ? ` · ${agent.workspace}` : ''}`,
-      `${STATE_TEXT[agent.state] || agent.state} ${elapsed(agent.stateStartedAt)}${agent.tool ? ` · ${agent.tool}` : ''}`
+      agent.title || i18n.t.unnamed,
+      `${agent.agent || 'agent'} · ${i18n.t.role} ${agent.role}${agent.workspace ? ` · ${agent.workspace}` : ''}`,
+      `${i18n.t.states[agent.state] || agent.state} ${elapsed(agent.stateStartedAt)}${agent.tool ? ` · ${agent.tool}` : ''}`
     ].join('\n')
     tip.style.left = `${Math.min(event.clientX + 12, innerWidth - 250)}px`
     tip.style.top = `${event.clientY + 12}px`
@@ -123,7 +123,7 @@
       const { message } = await orca.plugin.request('team.open')
       status.textContent = message
     } catch (error) {
-      status.textContent = `Không mở được team.json: ${error.code || ''} ${error.message}`
+      status.textContent = `${i18n.t.teamOpenFailed}${error.code || ''} ${error.message}`
     }
   }
 
@@ -134,7 +134,17 @@
   window.agentStore.onChange(handleAgentsChanged)
   setInterval(handleFrame, FRAME_MS)
   window.agentStore.load().catch((error) => {
-    status.textContent = `Không đọc được agent: ${error.code || ''} ${error.message}`
+    status.textContent = `${i18n.t.readFailed}${error.code || ''} ${error.message}`
   })
+
+  // The guide and labels follow the plugin's language setting, and switch when the person changes it.
+  function handleLanguageChanged() {
+    document.getElementById('guide-title').textContent = i18n.t.guideTitle
+    document.getElementById('guide-body').innerHTML = i18n.guide
+    document.getElementById('open-team').title = i18n.t.teamButtonTitle
+    draw()
+  }
+
+  i18n.load(handleLanguageChanged).then(handleLanguageChanged)
   handleAgentsChanged()
 })()

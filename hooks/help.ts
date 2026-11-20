@@ -1,5 +1,8 @@
-// The usage guide the /office pane shows under the office, as Markdown every surface draws.
-export const OFFICE_HELP = `**Cách đọc văn phòng**
+// The usage guide the /office pane shows under the office, as Markdown every surface draws; one per language.
+import type { Lang } from './i18n'
+
+export const OFFICE_HELP: Record<Lang, string> = {
+  vi: `**Cách đọc văn phòng**
 - Gõ phím, màn hình chạy code: **đang làm**
 - Giơ tay, bong bóng "!" đỏ: **cần bạn** (Claude Code đang hỏi duyệt một tool)
 - Bong bóng "…" và cốc cà phê: **đang chờ** (xong lượt, chờ bạn hoặc chờ việc)
@@ -15,4 +18,24 @@ export const OFFICE_HELP = `**Cách đọc văn phòng**
 - **\`/super-agents:review [ticket] [nhánh]\`** chỉ review code đã viết; ticket làm tiêu chí nghiệm thu, không ghi nhánh = thay đổi chưa commit
 - **\`/super-agents:review here [ticket]\`** review gọn trong tab này bằng subagent, không mở tab / worker mới; hỏi bạn chọn lỗi trước khi sửa
 - **\`/super-agents:dev status\`** xem worker nào đang làm / rảnh
-- Đóng pane là dừng cập nhật; **\`/office\`** mở lại.`
+- Đóng pane là dừng cập nhật; **\`/office\`** mở lại.
+- Ngôn ngữ: \`"language": "vi" | "en"\` trong **\`.agents/team.json\`** (mặc định tiếng Việt).`,
+  en: `**Reading the office**
+- Typing, code scrolling on screen: **working**
+- Hand raised, red "!" bubble: **needs you** (Claude Code is asking to approve a tool)
+- "…" bubble and a coffee cup: **waiting** (turn finished, waiting for you or for work)
+- "✓", leaning back: **done** — leaves the desk after 10 minutes
+- Shirt by role, letter on the chest: **O** purple orchestrator · **R** blue researcher · **C** green coder · **V** orange reviewer · **S** yellow skeptic · **T** pink tester · grey with no letter: role unknown
+- Hover a desk: description, agent type, last tool
+
+**Use**
+- The first desk is this Claude Code session; the others are the subagents / teammates it called.
+- For the right shirt: start a subagent's description with its role (**\`coder · fix header\`**) or use an agent named after a role (**\`web-tester\`**, **\`reviewer\`**).
+- **\`/super-agents:dev <ticket>\`** runs the whole team through Orca: (research) → plan → **you approve** → code → review → test → acceptance → **you approve**
+- **\`/super-agents:dev plan <ticket>\`** only plans and stops, saving **\`.agents/plans/<ticket>.md\`**; run **\`/super-agents:dev <ticket>\`** later to follow it
+- **\`/super-agents:review [ticket] [branch]\`** only reviews written code; the ticket gives the acceptance criteria, no branch = uncommitted changes
+- **\`/super-agents:review here [ticket]\`** reviews right in this tab with subagents, no new tab / worker; asks you which findings to fix first
+- **\`/super-agents:dev status\`** shows which workers are busy / free
+- Closing the pane stops the updates; **\`/office\`** opens it again.
+- Language: \`"language": "vi" | "en"\` in **\`.agents/team.json\`** (Vietnamese by default).`
+}

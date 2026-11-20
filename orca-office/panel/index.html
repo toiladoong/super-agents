@@ -67,7 +67,8 @@
         background: rgba(29, 78, 137, 0.08);
         color: #1d4e89;
       }
-      #help ul {
+      #help ul,
+      #guide-body ul {
         margin: 6px 0;
         padding-left: 18px;
       }
@@ -86,32 +87,15 @@
     </style>
   </head>
   <body>
-    <button id="open-team" title="Mở .agents/team.json của workspace đang mở">⚙ Team</button>
+    <button id="open-team">⚙ Team</button>
     <canvas id="office"></canvas>
     <div id="status"></div>
     <details id="help" open>
-      <summary>Hướng dẫn</summary>
-      <ul>
-        <li>Gõ phím, màn hình chạy code: <b>đang làm</b></li>
-        <li>Giơ tay, bong bóng "!" đỏ: <b>cần bạn</b> (agent đang hỏi duyệt hoặc chờ trả lời)</li>
-        <li>Bong bóng "…" và cốc cà phê: <b>đang chờ</b></li>
-        <li>Dấu "✓", ngả ghế: <b>xong</b>, rời bàn sau 10 phút</li>
-        <li>Áo theo vai, chữ trên ngực: <b>O</b> tím orchestrator · <b>R</b> xanh dương researcher · <b>C</b> xanh lá coder · <b>V</b> cam reviewer · <b>S</b> vàng skeptic · <b>T</b> hồng tester · áo xám không chữ: chưa rõ vai</li>
-        <li>Màu tóc theo AI: cam Claude · đen Codex · xanh Antigravity · tím Cursor · nâu OpenCode</li>
-        <li>Rê chuột lên bàn: tên, AI, vai, trạng thái, thời gian</li>
-      </ul>
-      <ul>
-        <li>Hiện agent của mọi workspace trong Orca, tên bàn là tên phiên (như ở sidebar Orca); cập nhật mỗi 3 giây.</li>
-        <li>Vai đọc từ tên tab <code>&lt;vai&gt; · &lt;phần việc&gt;</code> (lệnh <code>/super-agents:dev</code> tự đặt).</li>
-        <li><b>⚙ Team</b>: mở <code>.agents/team.json</code> để chọn AI / model cho từng vai và luật riêng của repo.</li>
-        <li><code>/super-agents:dev &lt;ticket&gt;</code> chạy cả nhóm: (research) → kế hoạch → <b>bạn duyệt</b> → code → review → test → nghiệm thu → <b>bạn duyệt</b></li>
-        <li><code>/super-agents:dev plan &lt;ticket&gt;</code> chỉ lập kế hoạch rồi dừng, lưu <code>.agents/plans/&lt;ticket&gt;.md</code>; chạy <code>/super-agents:dev &lt;ticket&gt;</code> sau để làm theo (thêm <code>here</code> để lập ngay trong tab)</li>
-        <li><code>/super-agents:review [ticket] [nhánh]</code> chỉ review code đã viết; ticket làm tiêu chí nghiệm thu, không ghi nhánh = thay đổi chưa commit</li>
-        <li><code>/super-agents:review here [ticket]</code> review gọn trong tab đang mở, không mở tab / worker mới; hỏi bạn chọn lỗi trước khi sửa</li>
-        <li><code>/super-agents:dev status</code> xem worker nào đang làm / rảnh</li>
-      </ul>
+      <summary id="guide-title"></summary>
+      <div id="guide-body"></div>
     </details>
     <div id="tip"></div>
+    <script src="../shared/i18n.js"></script>
     <script src="agents.js"></script>
     <script src="sprites.js"></script>
     <script src="office.js"></script>

@@ -1,22 +1,26 @@
 ---
 name: review
-description: Review code đã viết sẵn bằng nhóm worker Orca (reviewer + skeptic, coder sửa lỗi chặn, tester), hoặc gọn trong 1 tab bằng subagent với here — lối tắt cho chế độ review của skill dev. Dùng khi user gọi /review hoặc bảo review thay đổi chưa commit / một nhánh bằng các agent.
+description: Review already-written code with a team of Orca workers (reviewer + skeptic, coder fixes blocking issues, tester), or compactly in one tab with subagents via here — a shortcut for the dev skill's review mode. Use when the user calls /review or asks to have agents review uncommitted changes / a branch.
 ---
-# /review [here | off] [ticket] [nhánh]
+# /review [here | off] [ticket] [branch]
 
-Lối tắt cho `/dev review`: đọc `../dev/SKILL.md` (cùng plugin, `SKILL_DIR` của nó là thư mục `dev` bên cạnh thư mục
-này) rồi chạy đúng như user gõ `/dev review <tham số>`, theo mục "Code đã có sẵn" trong `../dev/modes.md`.
+Shortcut for `/dev review`: read `../dev/SKILL.md` (same plugin; its `SKILL_DIR` is the `dev` directory next to this
+one), then run exactly as if the user typed `/dev review <args>`, following the `/dev review` section in
+`../dev/modes.md`.
 
-- Không có tham số → review thay đổi chưa commit ở checkout hiện tại.
-- Có nhánh → review nhánh đó.
-- Có ticket → dùng ticket để viết tiêu chí nghiệm thu.
-- Có `here` → chạy gọn trong tab này bằng subagent, không mở tab / worker Orca (mục "Trong 1 tab" trong `../dev/modes.md`).
-  Review xong luôn dừng lại hỏi user sửa lỗi nào; không sửa gì khi chưa được xác nhận. Mod của plugin **khoá cứng** các
-  tool sửa file (Edit / Write / MultiEdit / NotebookEdit) tới khi user trả lời có chữ "sửa …", mở cho đúng lượt đó.
-- Khoá tự tắt khi review kết thúc (câu nghiệm thu kết thúc bằng dòng `✅ Review xong`), khi user trả lời "không sửa" /
-  "bỏ qua", hoặc khi user gõ lệnh `/…` khác. Có `off` (hoặc user nói "xong review") → tắt khoá bằng tay; chỉ báo "đã tắt
-  khoá review", không làm gì thêm.
+- No arguments → review the uncommitted changes in the current checkout.
+- A branch → review that branch.
+- A ticket → use the ticket to write the acceptance criteria.
+- `here` → run compactly in this tab with subagents, without opening Orca tabs / workers (the `here` section in
+  `../dev/modes.md`). After the review, always stop and ask the user which issues to fix; fix nothing until confirmed.
+  The plugin's mod **hard-locks** the file-editing tools (Edit / Write / MultiEdit / NotebookEdit) until the user
+  replies with "sửa …" / "fix …" (e.g. "sửa 1, 3", "sửa hết lỗi chặn" / "fix all blocking"), and unlocks them for
+  that turn only.
+- The lock turns off by itself when the review ends (the acceptance message ends with the line `✅ Review xong` (vi) /
+  `✅ Review done` (en)), when the user replies "không sửa" / "skip" or "bỏ qua", or when the user types another `/…`
+  command. With `off` (or when the user says "xong review" / "done review") → turn the lock off manually; only report
+  "review lock turned off", do nothing else.
 
-Cách viết cũ `--here` / `--off` vẫn dùng được.
+The old `--here` / `--off` syntax still works.
 
-Luồng, vai, cách mở tab orchestrator và luật đều theo skill `dev`; skill này không thêm luật nào.
+The flow, roles, how to open the orchestrator tab and the rules all follow the `dev` skill; this skill adds no rules.

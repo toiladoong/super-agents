@@ -2,6 +2,8 @@
 import type { AgentInfo, AgentStatus } from 'claude-code'
 
 import type { OfficeAgent, OfficeState } from '../types'
+import { TEXT } from './i18n'
+import type { Lang } from './i18n'
 
 // A finished agent stays at its desk this long, then leaves the office.
 export const DONE_LINGER_MS = 10 * 60 * 1000
@@ -41,9 +43,9 @@ export function newActivity(): LoopActivity {
   return { since: new Map(), asking: new Set(), lastTool: new Map(), mainState: 'waiting' }
 }
 
-export function officeAgents(list: AgentInfo[], activity: LoopActivity, now: number): OfficeAgent[] {
+export function officeAgents(list: AgentInfo[], activity: LoopActivity, now: number, lang: Lang = 'vi'): OfficeAgent[] {
   const desks: Omit<OfficeAgent, 'since'>[] = [
-    { key: MAIN_KEY, title: 'Claude (phiên chính)', agent: 'claude', role: 'agent', state: activity.mainState, tool: null, workspace: 'Claude Code' },
+    { key: MAIN_KEY, title: TEXT[lang].mainSession, agent: 'claude', role: 'agent', state: activity.mainState, tool: null, workspace: 'Claude Code' },
     ...list.map((info) => ({
       key: info.id,
       title: info.name ? `${info.description} (${info.name})` : info.description,

@@ -1,5 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
+import { languageOf } from '../hooks/i18n'
 import { DONE_MARKER, afterReviewCommand, reviewMode, confirmsFix, endsReview, isReviewSkill, movesOn, suggestionAfterTurn, typedReviewCommand } from '../hooks/review-guard'
 
 test('reads the person’s answer', async () => {
@@ -9,6 +10,12 @@ test('reads the person’s answer', async () => {
   expect(confirmsFix('chưa sửa, giải thích lỗi 2')).toBe(false)
   expect(confirmsFix('lỗi 2 là gì?')).toBe(false)
   expect(endsReview('xong review')).toBe(true)
+  expect(confirmsFix('fix 1, 3')).toBe(true)
+  expect(confirmsFix('yes, fix all blocking')).toBe(true)
+  expect(confirmsFix('how would you fix 2?')).toBe(false)
+  expect(endsReview('skip')).toBe(true)
+  expect(endsReview('ignore them')).toBe(true)
+  expect(endsReview('done review')).toBe(true)
   expect(confirmsFix('lỗi 2 sửa thế nào?')).toBe(false)
   expect(confirmsFix('sửa 1, bỏ qua 3')).toBe(true)
   expect(endsReview('sửa 1, bỏ qua 3')).toBe(false)
@@ -63,6 +70,13 @@ ${DONE_MARKER}`, durationMs: 1, isAborted: false, turnId: 't2', reason: 'answer'
 })
 
 test('suggests the next answer while the review runs', async () => {
+  expect(suggestionAfterTurn({ isActive: true, isTurnAllowed: false }, 'Findings …', 'en')).toBe('fix all blocking')
+  expect(suggestionAfterTurn({ isActive: true, isTurnAllowed: true }, 'Fixed 1', 'en')).toBe('done review')
+  expect(suggestionAfterTurn({ isActive: true, isTurnAllowed: true }, 'Summary ✅ Review done', 'en')).toBeNull()
+  expect(languageOf('{"language":"en"}')).toBe('en')
+  expect(languageOf('{"roles":{}}')).toBe('vi')
+  expect(languageOf('not json')).toBe('vi')
+  expect(languageOf(null)).toBe('vi')
   expect(suggestionAfterTurn({ isActive: true, isTurnAllowed: false }, 'Bảng lỗi …')).toBe('sửa hết lỗi chặn')
   expect(suggestionAfterTurn({ isActive: true, isTurnAllowed: true }, 'Đã sửa 1, 3')).toBe('xong review')
   expect(suggestionAfterTurn({ isActive: true, isTurnAllowed: true }, `Tóm tắt

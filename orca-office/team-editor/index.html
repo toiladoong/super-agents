@@ -58,6 +58,9 @@
         background: var(--orca-background);
         color: var(--orca-foreground);
       }
+      #language select {
+        width: 220px;
+      }
       .note {
         display: flex;
         gap: 6px;
@@ -88,13 +91,17 @@
   </head>
   <body>
     <div id="error"></div>
-    <h2>Vai trò</h2>
-    <p class="hint">Mỗi vai chạy bằng AI nào, model nào. Bỏ trống model = model mặc định của AI; bỏ trống file vai = vai mặc định của plugin.</p>
+    <h2 id="language-title"></h2>
+    <p class="hint" id="language-hint"></p>
+    <div id="language"></div>
+    <h2 id="roles-title"></h2>
+    <p class="hint" id="roles-hint"></p>
     <div id="roles"></div>
-    <h2>Luật riêng của repo (notes)</h2>
-    <p class="hint">Orchestrator đọc và chép phần liên quan vào việc giao cho từng worker.</p>
+    <h2 id="notes-title"></h2>
+    <p class="hint" id="notes-hint"></p>
     <div id="notes"></div>
-    <button id="add-note">+ Thêm luật</button>
+    <button id="add-note"></button>
+    <script src="../shared/i18n.js"></script>
     <script src="../panel/sprites.js"></script>
     <script src="editor.js"></script>
   </body>

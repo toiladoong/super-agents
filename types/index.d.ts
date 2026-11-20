@@ -11,7 +11,7 @@ export type OfficeAgent = {
   workspace: string
 }
 
-export type OfficeView = { agents: OfficeAgent[]; error: string | null; now: number }
+export type OfficeView = { agents: OfficeAgent[]; error: string | null; now: number; lang: 'vi' | 'en' }
 
 declare module 'claude-code' {
   interface PluginState {

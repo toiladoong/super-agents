@@ -1,26 +1,30 @@
 // Rules of the `/super-agents:review --here` guard (the hooks that apply them are in register.tsx: an engine `$` is only
 // followed into functions of the same file). While that review runs, no file is edited until the person answers with a
-// "sửa …" prompt; the unlock lasts that one turn, the next round asks again.
+// "sửa …" / "fix …" prompt; the unlock lasts that one turn, the next round asks again. Answers in Vietnamese and English
+// are both understood; what the person sees follows the repo's language (i18n.ts).
 // It ends by itself: Claude closes the review with DONE_MARKER, the person declines ("không sửa", "bỏ qua"), or the
 // person moves on to another slash command. "xong review" / `--off` end it by hand.
 // Bash can still write files: this guards the edit tools, the skill's own rule covers the rest.
+import { TEXT } from './i18n'
+import type { Lang } from './i18n'
+
 export type ReviewGuard = { isActive: boolean; isTurnAllowed: boolean }
 
 const OFF: ReviewGuard = { isActive: false, isTurnAllowed: false }
 
 export const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit'])
 
-// The skill tells Claude to end the review's final summary with this line; the guard turns off when it sees it.
-export const DONE_MARKER = '✅ Review xong'
+// The skill tells Claude to end the review's final summary with one of these lines; the guard turns off when it sees it.
+export const DONE_MARKERS = ['✅ Review xong', '✅ Review done']
+export const DONE_MARKER = DONE_MARKERS[0]
 
 export const DENY_REASON =
-  'super-agents review here: chưa được sửa. Báo bảng lỗi đánh số và hỏi user sửa lỗi nào; chỉ sửa sau khi user trả lời "sửa …".'
+  'super-agents review here: not allowed to edit yet. Show the numbered findings and ask which to fix; edit only after ' +
+  'the user answers "sửa …" / "fix …".'
 
-export function guardStatus(state: ReviewGuard): string | undefined {
+export function guardStatus(state: ReviewGuard, lang: Lang = 'vi'): string | undefined {
   if (!state.isActive) return undefined
-  return state.isTurnAllowed
-    ? '✏️ review here: đang sửa các lỗi đã chọn'
-    : '🔒 review here: chưa sửa file — trả lời "sửa 1, 3" / "sửa hết lỗi chặn" để cho phép'
+  return state.isTurnAllowed ? TEXT[lang].guardOpen : TEXT[lang].guardLocked
 }
 
 export function isReviewSkill(skill: string): boolean {
@@ -28,15 +32,15 @@ export function isReviewSkill(skill: string): boolean {
 }
 
 // Only the start of the answer decides: "sửa 1, bỏ qua 3" fixes 1, "lỗi 2 sửa thế nào?" is a question, not a go-ahead.
-const CONFIRMS = /^\s*((ok|okay|đồng ý|được)\s*[,.:]?\s*)?(sửa|fix)(?![\p{L}])/iu
-const DECLINES = /^\s*(không\s+sửa|đừng\s+sửa|bỏ\s+qua)(?![\p{L}])/iu
+const CONFIRMS = /^\s*((ok|okay|yes|đồng ý|được)\s*[,.:]?\s*)?(sửa|fix)(?![\p{L}])/iu
+const DECLINES = /^\s*(không\s+sửa|đừng\s+sửa|bỏ\s+qua|skip|ignore|no\s+fix|don'?t\s+fix)(?![\p{L}])/iu
 
 export function confirmsFix(text: string): boolean {
   return CONFIRMS.test(text)
 }
 
 export function endsReview(text: string): boolean {
-  return /xong review|kết thúc review/iu.test(text) || DECLINES.test(text)
+  return /xong review|kết thúc review|done review|end review|finish review/iu.test(text) || DECLINES.test(text)
 }
 
 // Another slash command than the review means the person moved on (a pasted path such as /c/Users/… is not one).
@@ -46,7 +50,7 @@ export function movesOn(text: string): boolean {
 }
 
 export function finishesReview(answer: string): boolean {
-  return answer.includes(DONE_MARKER)
+  return DONE_MARKERS.some((marker) => answer.includes(marker))
 }
 
 // The guard after the review skill is called with `args` (Skill tool or a typed command): `--here` starts it locked,
@@ -96,7 +100,7 @@ export function afterTurn(state: ReviewGuard, answer: string): ReviewGuard {
 }
 
 // The dim prompt suggestion (Tab takes it) after a main-loop turn while the review runs. Null once it ended.
-export function suggestionAfterTurn(stateBefore: ReviewGuard, answer: string): string | null {
+export function suggestionAfterTurn(stateBefore: ReviewGuard, answer: string, lang: Lang = 'vi'): string | null {
   if (!stateBefore.isActive || finishesReview(answer)) return null
-  return stateBefore.isTurnAllowed ? 'xong review' : 'sửa hết lỗi chặn'
+  return stateBefore.isTurnAllowed ? TEXT[lang].suggestDone : TEXT[lang].suggestFix
 }

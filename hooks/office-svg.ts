@@ -1,6 +1,8 @@
 // Draws the office as one SVG: pixels are <rect>s in logical units, animated with SMIL (no script runs in the frame).
 // Same art as the Orca panel (super-agents/orca-office/panel/sprites.js).
 import type { OfficeAgent, OfficeState } from '../types'
+import { TEXT } from './i18n'
+import type { Lang } from './i18n'
 
 const CELL_W = 64
 const CELL_H = 44
@@ -29,7 +31,6 @@ const HAIR: Record<string, string> = {
   opencode: '#7a5230'
 }
 const SCREEN: Record<OfficeState, string> = { working: '#1d3b52', blocked: '#4a1f24', waiting: '#2a2d36', done: '#121316' }
-const STATE_TEXT: Record<OfficeState, string> = { working: 'đang làm', blocked: 'cần bạn', waiting: 'đang chờ', done: 'xong' }
 const SKIN = '#f1c27d'
 // A 3x5 pixel letter on the shirt per role (researcher and reviewer both start with R: reviewer is V).
 const ROLE_LETTER: Record<string, string> = { orchestrator: 'O', researcher: 'R', coder: 'C', reviewer: 'V', skeptic: 'S', tester: 'T' }
@@ -136,11 +137,11 @@ function bubble(x: number, y: number, state: OfficeState): string {
   return frame + check.join('')
 }
 
-function desk(x: number, y: number, agent: OfficeAgent, now: number): string {
+function desk(x: number, y: number, agent: OfficeAgent, now: number, lang: Lang): string {
   const tooltip = [
     agent.title || '(không tên)',
-    `${agent.agent} · vai ${agent.role} · ${agent.workspace}`,
-    `${STATE_TEXT[agent.state]} ${elapsed(agent.since, now)}${agent.tool ? ` · ${agent.tool}` : ''}`
+    `${agent.agent} · ${TEXT[lang].role} ${agent.role} · ${agent.workspace}`,
+    `${TEXT[lang].stateWords[agent.state]} ${elapsed(agent.since, now)}${agent.tool ? ` · ${agent.tool}` : ''}`
   ].join('\n')
   const mug =
     agent.state === 'waiting'
@@ -177,7 +178,7 @@ function wall(width: number): string {
   return parts.join('')
 }
 
-export function officeSvg(agents: OfficeAgent[], columns: number, now: number): string {
+export function officeSvg(agents: OfficeAgent[], columns: number, now: number, lang: Lang = 'vi'): string {
   // Over the desk limit, agents waiting on the person (blocked) are seated first so none is hidden.
   const seated =
     agents.length > MAX_DESKS
@@ -195,13 +196,13 @@ export function officeSvg(agents: OfficeAgent[], columns: number, now: number): 
     body.push(`<rect x="0" y="${y}" width="${width}" height="${CELL_H}" fill="url(#floor)"/>`, rect(0, y + CELL_H, width, LABEL_H, '#1e1f24'))
   }
   seated.forEach((agent, index) => {
-    body.push(desk((index % columns) * CELL_W, WALL_H + Math.floor(index / columns) * (CELL_H + LABEL_H), agent, now))
+    body.push(desk((index % columns) * CELL_W, WALL_H + Math.floor(index / columns) * (CELL_H + LABEL_H), agent, now, lang))
   })
   if (seated.length === 0) {
-    body.push(`<text x="${width / 2}" y="${WALL_H + 24}" font-size="4.5" fill="#2e3440" text-anchor="middle" font-family="system-ui, sans-serif">Chưa có agent nào đang chạy</text>`)
+    body.push(`<text x="${width / 2}" y="${WALL_H + 24}" font-size="4.5" fill="#2e3440" text-anchor="middle" font-family="system-ui, sans-serif">${TEXT[lang].noAgents}</text>`)
   }
   if (agents.length > seated.length) {
-    body.push(`<text x="${width - 3}" y="${height - 3}" font-size="4" fill="#d8dee9" text-anchor="end">+${agents.length - seated.length} agent nữa</text>`)
+    body.push(`<text x="${width - 3}" y="${height - 3}" font-size="4" fill="#d8dee9" text-anchor="end">${TEXT[lang].moreAgents(agents.length - seated.length)}</text>`)
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width * SCALE}" height="${height * SCALE}" shape-rendering="crispEdges">${body.join('')}</svg>`
 }

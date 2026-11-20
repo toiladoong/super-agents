@@ -9,6 +9,23 @@ import type { OrcaWorkerApi } from 'orca/worker'
 
 const TEAM_PATH = '.agents/team.json'
 
+const MESSAGES = {
+  vi: {
+    noWorkspace: 'Chưa có workspace nào đang mở.',
+    noMatch: (name: string) => `Không tìm thấy workspace "${name}".`,
+    opened: `Đã mở ${TEAM_PATH}. Nếu đang hiện JSON, chọn "Team" ở nút chuyển cạnh Source.`,
+    failed: (reason: string) =>
+      `Không mở được ${TEAM_PATH} (${reason}). Repo chưa có file này thì chép team.default.json của plugin super-agents vào.`
+  },
+  en: {
+    noWorkspace: 'No workspace is open.',
+    noMatch: (name: string) => `Workspace "${name}" not found.`,
+    opened: `Opened ${TEAM_PATH}. If it shows JSON, pick "Team" in the toggle next to Source.`,
+    failed: (reason: string) =>
+      `Could not open ${TEAM_PATH} (${reason}). If the repo has no such file, copy the super-agents plugin's team.default.json there.`
+  }
+}
+
 type PsAgent = {
   paneKey: string
   state: string
@@ -70,22 +87,23 @@ async function agentsSnapshot() {
 export default function activate(orca: OrcaWorkerApi): void {
   orca.panels.handle('agents.snapshot', async () => ({ agents: await agentsSnapshot() }))
 
-  // Opens the focused workspace's team.json; the panel shows the answer.
+  // Opens the focused workspace's team.json; the panel shows the answer, in the plugin's language setting.
   orca.panels.handle('team.open', async () => {
+    const say = (await orca.settings.get('language').catch(() => 'vi')) === 'en' ? MESSAGES.en : MESSAGES.vi
     const context = await orca.host.call('workspace.readContext', {})
-    if (!context) return { opened: false, message: 'Chưa có workspace nào đang mở.' }
+    if (!context) return { opened: false, message: say.noWorkspace }
     const { workspaces } = await orca.host.call('workspace.list', {})
     // readContext gives no id: match the focused workspace by its name, then by branch.
     const workspace =
       workspaces.find((candidate) => candidate.name === context.displayName) ??
       workspaces.find((candidate) => candidate.branch === context.branch)
-    if (!workspace) return { opened: false, message: `Không tìm thấy workspace "${context.displayName}".` }
+    if (!workspace) return { opened: false, message: say.noMatch(context.displayName) }
     try {
       await orca.host.call('editor.open', { workspaceId: workspace.id, path: TEAM_PATH })
-      return { opened: true, message: `Đã mở ${TEAM_PATH}. Nếu đang hiện JSON, chọn "Team" ở nút chuyển cạnh Source.` }
+      return { opened: true, message: say.opened }
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error)
-      return { opened: false, message: `Không mở được ${TEAM_PATH} (${reason}). Repo chưa có file này thì chép team.default.json của plugin super-agents vào.` }
+      return { opened: false, message: say.failed(reason) }
     }
   })
 }

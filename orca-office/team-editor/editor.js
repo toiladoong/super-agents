@@ -16,6 +16,7 @@
   const rolesBox = document.getElementById('roles')
   const notesBox = document.getElementById('notes')
   const errorBox = document.getElementById('error')
+  const t = () => window.officeI18n.t
 
   const session = await orca.document.session({
     decode: (content) => {
@@ -108,13 +109,13 @@
 
   function handleModelSelect(role, select) {
     if (select.value !== CUSTOM) return handleRoleFieldChange(role, 'model', select.value)
-    const input = field(role, 'model', '', 'tên model')
+    const input = field(role, 'model', '', t().modelPlaceholder)
     select.replaceWith(input)
     input.focus()
   }
 
   function modelField(role, agent, value) {
-    const options = [['', 'mặc định'], ...(MODELS[agent] || []).map((name) => [name, name]), [CUSTOM, 'nhập tên khác…']]
+    const options = [['', t().modelDefault], ...(MODELS[agent] || []).map((name) => [name, name]), [CUSTOM, t().modelCustom]]
     return choice(value, options, (select) => handleModelSelect(role, select))
   }
 
@@ -134,7 +135,7 @@
           label,
           choice(agent, AGENTS.map((name) => [name, name]), (select) => handleRoleFieldChange(role, 'agent', select.value)),
           modelField(role, agent, roleConfig.model),
-          field(role, 'role', roleConfig.role, 'vai mặc định của plugin')
+          field(role, 'role', roleConfig.role, t().rolePlaceholder)
         )
         return row
       })
@@ -152,7 +153,7 @@
         text.addEventListener('change', () => handleNoteChange(index, text.value))
         const remove = document.createElement('button')
         remove.textContent = '✕'
-        remove.title = 'Xoá luật này'
+        remove.title = t().removeNote
         remove.disabled = session.readOnly
         remove.addEventListener('click', () => handleNoteRemove(index))
         row.append(text, remove)
@@ -161,16 +162,36 @@
     )
   }
 
+  // The repo's reply language (`language` in team.json): Vietnamese unless set to English.
+  function handleLanguageChange(select) {
+    const team = currentTeam()
+    team.language = select.value
+    commit(team)
+  }
+
+  function renderLanguage(team) {
+    const select = choice(team.language === 'en' ? 'en' : 'vi', [['vi', 'Tiếng Việt'], ['en', 'English']], handleLanguageChange)
+    document.getElementById('language').replaceChildren(select)
+  }
+
   function render() {
     const { team, error } = session.value
     errorBox.style.display = error ? 'block' : 'none'
-    errorBox.textContent = error ? `File không phải JSON hợp lệ (${error}). Sửa ở chế độ Source trước.` : ''
+    errorBox.textContent = error ? t().badJson(error) : ''
+    for (const id of ['language', 'roles', 'notes']) {
+      document.getElementById(`${id}-title`).textContent = t()[`${id}Title`]
+      document.getElementById(`${id}-hint`).textContent = t()[`${id}Hint`]
+    }
+    document.getElementById('add-note').textContent = t().addNote
     if (!team) return
+    renderLanguage(team)
     renderRoles(team)
     renderNotes(team)
   }
 
   document.getElementById('add-note').addEventListener('click', handleNoteAdd)
   session.onReplace(render)
+  // The editor's own words follow the plugin's language setting (Orca Settings), not the file's.
+  await window.officeI18n.load(render)
   render()
 })()

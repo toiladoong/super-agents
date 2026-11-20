@@ -1,108 +1,128 @@
 ---
 name: dev
-description: Chạy một ticket / tính năng bằng nhóm worker Orca — orchestrator điều phối (research) → kế hoạch → coder → review → test; /dev plan chỉ lập kế hoạch (lưu .agents/plans/<ticket>.md) rồi dừng; /dev review cho code đã viết sẵn; /dev research chỉ tìm hiểu; /dev status xem worker nào đang làm / rảnh. Vai trò và AI lấy từ .agents/team.json của repo (mặc định Claude). Dùng khi user gọi /dev, hoặc bảo chia việc cho nhiều agent / worker Orca.
+description: Run a ticket / feature with a team of Orca workers — the orchestrator coordinates (research) → plan → coder → review → test; /dev plan only makes the plan (saved to .agents/plans/<ticket>.md) then stops; /dev review for code already written; /dev research only investigates; /dev status shows which workers are busy / idle. Roles and AIs come from the repo's .agents/team.json (default Claude). Use when the user calls /dev, or asks to split work across several agents / Orca workers.
 ---
-# /dev <ticket hoặc mô tả> [--research]  ·  /dev plan [here] <ticket>  ·  /dev research <câu hỏi>  ·  /dev review [here] <ticket> [nhánh]  ·  /dev status
+# /dev <ticket or description> [--research]  ·  /dev plan [here] <ticket>  ·  /dev research <question>  ·  /dev review [here] <ticket> [branch]  ·  /dev status
 
-`SKILL_DIR` = đường dẫn tuyệt đối của thư mục chứa file này. Vai mặc định ở `SKILL_DIR/roles/`, các chế độ phụ ở
-`SKILL_DIR/modes.md`.
+`SKILL_DIR` = absolute path of the folder holding this file. Default roles are in `SKILL_DIR/roles/`, secondary modes
+in `SKILL_DIR/modes.md`.
 
-## Ai chạy skill này
-- **Prompt bắt đầu bằng "Bạn là orchestrator"** → bạn là orchestrator: đọc `SKILL_DIR/roles/orchestrator.md`, rồi làm theo luồng dưới đây.
-- **`/dev status`** → không mở tab orchestrator, làm theo mục "Theo dõi" trong `modes.md`.
-- **`plan` có cờ `here`** → không mở tab orchestrator: bạn lập kế hoạch ngay tại tab này, theo mục "Chỉ lập kế hoạch" trong
-  `modes.md`.
-- **`review` có cờ `here`** → không mở tab orchestrator: bạn là orchestrator ngay tại tab này, làm theo mục "Trong 1 tab" trong
-  `modes.md` (subagent thay cho worker Orca).
-- **Còn lại** (user gõ `/dev` trong phiên thường) → mở tab orchestrator rồi dừng, không tự làm luồng:
+## Who runs this skill
+- **Prompt starts with "You are the orchestrator"** → you are the orchestrator: read `SKILL_DIR/roles/orchestrator.md`,
+  then follow the flow below.
+- **`/dev status`** → do not open an orchestrator tab, follow the "Monitoring" section in `modes.md`.
+- **`plan` with the `here` flag** → do not open an orchestrator tab: you make the plan right in this tab, per the
+  "Plan only" section in `modes.md`.
+- **`review` with the `here` flag** → do not open an orchestrator tab: you are the orchestrator in this tab, follow
+  the "In one tab" section in `modes.md` (subagents instead of Orca workers).
+- **Otherwise** (the user types `/dev` in a normal session) → open an orchestrator tab then stop, do not run the flow
+  yourself:
 
   ```
   orca agent launch --agent <orchestrator.agent> [--model <orchestrator.model>] --worktree current --focus \
-    --prompt "Bạn là orchestrator. Đọc <SKILL_DIR>/SKILL.md và chạy với: <đúng tham số user gõ>"
+    --prompt "You are the orchestrator. Read <SKILL_DIR>/SKILL.md and run with: <the exact arguments the user typed>"
   ```
 
-  Báo user: trao đổi, duyệt spec và nghiệm thu ở tab orchestrator. User bảo "làm orchestrator ở đây luôn" → bỏ qua, bạn là orchestrator.
+  Tell the user: discussion, spec approval and acceptance happen in the orchestrator tab. If the user says "be the
+  orchestrator here" → skip this, you are the orchestrator.
 
-Orchestrator dùng cơ chế Orca (worker-start, send, khi được đánh thức...) theo skill `orchestration`
-(`orca skills get orchestration`) — đọc nó trước. Skill này chỉ quy định luồng và luật.
+The orchestrator uses Orca mechanics (worker-start, send, when woken up...) per the `orchestration` skill
+(`orca skills get orchestration`) — read it first. This skill only defines the flow and the rules.
 
-## Cấu hình
-Đọc `.agents/team.json` ở gốc repo; không có thì dùng `SKILL_DIR/team.default.json`.
-- `roles.<vai>`: `agent` (id Orca: claude, codex, antigravity, cursor, opencode...), `model` (tuỳ chọn), `role` (file prompt vai,
-  đường dẫn tính từ gốc repo). Vai: `orchestrator`, `researcher`, `coder`, `reviewer`, `tester`.
-  Vai thiếu trong file → `agent: claude`, không `--model`. Vai thiếu `role` → `SKILL_DIR/roles/<vai>.md`.
-- `notes`: luật riêng của repo (thư mục dùng chung, tài nguyên chỉ tester dùng, skill cần đọc...). Orchestrator đọc và áp dụng
-  khi chia việc, chép phần liên quan vào spec của worker.
+## Config
+Read `.agents/team.json` at the repo root; if missing, use `SKILL_DIR/team.default.json`.
+- `roles.<role>`: `agent` (Orca id: claude, codex, antigravity, cursor, opencode...), `model` (optional), `role` (role
+  prompt file, path from the repo root). Roles: `orchestrator`, `researcher`, `coder`, `reviewer`, `tester`.
+  Role missing from the file → `agent: claude`, no `--model`. Role missing `role` → `SKILL_DIR/roles/<role>.md`.
+- `notes`: the repo's own rules (shared folders, resources only the tester uses, skills to read...). The orchestrator
+  reads and applies them when splitting work, copying the relevant part into each worker's spec.
+- `language`: `vi` (default) or `en` — the language every reply to the user, every spec / plan file and every message
+  to workers uses. Instructions here are in English; replies follow `language`.
 
-Lệnh cho mỗi worker (chỉ thêm `--model` khi có `model`), rồi đặt tên tab theo vai để panel Agent Office và `/dev status`
-nhận ra (`<handle>` lấy từ kết quả `worker-start`; orchestrator đặt tên tab của chính mình là `orchestrator · <ticket>`):
+Command for each worker (add `--model` only when there is a `model`), then name the tab after the role so the Agent
+Office panel and `/dev status` recognize it (`<handle>` comes from the `worker-start` result; the orchestrator names its
+own tab `orchestrator · <ticket>`):
 
 ```
 orca orchestration worker-start --agent <agent> [--model <model>] --worktree <...> --spec "<spec>"
-orca terminal rename --terminal <handle> --title "<vai> · <phần việc>"
+orca terminal rename --terminal <handle> --title "<role> · <work part>"
 ```
 
 ## Ticket
-Tham số ticket là mã (vd. `SG-30200`), link (Jira, Figma…) hoặc một mô tả bằng chữ.
-- **Đọc được thật mới dùng:** mã / link thì đọc nội dung bằng công cụ có sẵn (skill / connector Jira, Figma…). Không đọc
-  được (không có công cụ, chưa đăng nhập, lỗi) → **dừng, báo user** và xin mô tả hoặc quyền truy cập; không đoán yêu cầu
-  từ mã ticket. Mô tả bằng chữ thì dùng luôn làm yêu cầu.
-- **Tên từ ticket** (file `.agents/plans/<tên>.md`, worktree `<tên>-<phần>`, tab `orchestrator · <tên>`): mã ticket thì
-  dùng mã (`SG-30200`); link / mô tả thì rút gọn: bỏ dấu tiếng Việt, chữ thường, chỉ giữ `a-z 0-9` và `-`, các ký tự
-  khác thành `-`, gộp `-` liền nhau, tối đa 40 ký tự (vd. "Thêm tab Thể thao vào Header" → `them-tab-the-thao-vao-header`).
-  Dùng **cùng một tên** cho mọi chỗ trong một lần chạy.
+The ticket argument is a key (e.g. `SG-30200`), a link (Jira, Figma…) or a text description.
+- **Use it only if it can really be read:** for a key / link, read the content with the available tools (Jira, Figma
+  skill / connector…). Cannot read it (no tool, not logged in, error) → **stop, tell the user** and ask for a
+  description or access; do not guess the requirements from the ticket key. A text description is used directly as the
+  requirements.
+- **Name from the ticket** (file `.agents/plans/<name>.md`, worktree `<name>-<part>`, tab `orchestrator · <name>`): for
+  a ticket key use the key (`SG-30200`); for a link / description shorten it: strip diacritics (e.g. Vietnamese),
+  lowercase, keep only `a-z 0-9` and `-`, other characters become `-`, collapse consecutive `-`, at most 40 characters
+  (e.g. "Add Sports tab to Header" → `add-sports-tab-to-header`; "Thêm tab Thể thao" → `them-tab-the-thao`).
+  Use **the same name** everywhere within one run.
 
-## Luồng
-0. **Research** (tuỳ chọn): user thêm `--research`, hoặc ticket có điểm chưa rõ. Tách thành câu hỏi độc lập, mỗi câu
-   một worker `researcher` trên `--worktree current` (chỉ đọc), song song. Gộp trả lời vào spec; đưa "Lựa chọn" cho
-   user chọn nếu có.
-1. **Spec** (orchestrator tự làm; đã có `.agents/plans/<ticket>.md` thì dùng file đó, mục "Chỉ lập kế hoạch" trong
-   `modes.md`): đọc ticket (Jira / Figma nếu có công cụ), viết kế hoạch: phần việc, file dự kiến đổi,
-   tiêu chí nghiệm thu, và **kế hoạch chạy** (mục "Phụ thuộc" dưới đây) kèm rủi ro xung đột khi gộp.
-   Worktree mới tạo từ HEAD: checkout hiện tại có thay đổi chưa commit liên quan → báo user commit trước, hoặc dùng
-   `/dev review`. **Hỏi user duyệt** rồi mới sang bước 2 (duyệt luôn việc commit local ở bước 2 nếu kế hoạch có nối tiếp).
-2. **Code**: theo kế hoạch chạy. Mỗi phần một worker `coder`, một worktree: `--worktree new-child --name <ticket>-<phần>`.
-   - Phần phụ thuộc chỉ bắt đầu khi phần nó cần đã **qua review và test (PASS)** — "coder báo xong" chưa đủ. Khi đó
-     orchestrator **commit local** trên nhánh của phần đó (không push, không gộp; user đã duyệt cùng kế hoạch chạy ở
-     bước 1), rồi tạo worktree cho phần phụ thuộc từ nhánh này (`--base-branch <nhánh>`).
-   - Coder tự chạy build / lint / unit test; không dùng tài nguyên chỉ dành cho tester (dev server, thiết bị).
-3. **Review**: worker `reviewer` trên **worktree của coder**. Reviewer là Claude có plugin ponytail → spec ghi thêm
-   "chạy `/ponytail:ponytail-review` trên diff trước". Rồi theo mục "Review đối kháng" dưới đây.
-4. **Test**: **một** worker `tester`, test **lần lượt** từng worktree. Spec ghi worktree + nhánh và tiêu chí nghiệm thu.
-5. **Nghiệm thu**: tóm tắt cho user (thay đổi, review, bảng test). Có ponytail: `/ponytail:ponytail-debt` từng worktree,
-   đưa các `shortcut:` vào tóm tắt. **Hỏi user duyệt** trước khi gộp. Gộp **từng nhánh một**, phần được phụ thuộc trước;
-   xung đột → dừng, báo user, không tự giải.
+## Flow
+0. **Research** (optional): the user adds `--research`, or the ticket has unclear points. Split into independent
+   questions, one `researcher` worker per question on `--worktree current` (read-only), in parallel. Merge the answers
+   into the spec; present "Options" for the user to choose if any.
+1. **Spec** (the orchestrator does it itself; if `.agents/plans/<ticket>.md` already exists, use that file, see the
+   "Plan only" section in `modes.md`): read the ticket (Jira / Figma if tools exist), write the plan: work parts, files
+   expected to change, acceptance criteria, and the **run plan** (the "Dependencies" section below) with merge-conflict
+   risks. New worktrees are created from HEAD: if the current checkout has related uncommitted changes → tell the user
+   to commit first, or use `/dev review`. **Ask the user to approve** before moving to step 2 (this also approves the
+   local commits in step 2 if the plan has sequential parts).
+2. **Code**: per the run plan. One `coder` worker per part, one worktree each:
+   `--worktree new-child --name <ticket>-<part>`.
+   - A dependent part starts only when the part it needs has **passed review and test (PASS)** — "coder reports done"
+     is not enough. Then the orchestrator **commits locally** on that part's branch (no push, no merge; the user
+     approved this with the run plan in step 1), then creates the dependent part's worktree from that branch
+     (`--base-branch <branch>`).
+   - The coder runs build / lint / unit tests itself; it does not use resources reserved for the tester (dev server,
+     devices).
+3. **Review**: a `reviewer` worker on **the coder's worktree**. If the reviewer is Claude with the ponytail plugin → the
+   spec also says "run `/ponytail:ponytail-review` on the diff first". Then follow the "Adversarial review" section
+   below.
+4. **Test**: **one** `tester` worker, testing each worktree **in turn**. The spec gives worktree + branch and the
+   acceptance criteria.
+5. **Acceptance**: summarize for the user (changes, review, test table). With ponytail: `/ponytail:ponytail-debt` on
+   each worktree, put the `shortcut:` items in the summary. **Ask the user to approve** before merging. Merge **one
+   branch at a time**, depended-on parts first; conflict → stop, tell the user, do not resolve it yourself.
 
-## Phụ thuộc (bước 1)
-Xét từng cặp phần việc. **Phải chạy nối tiếp** (hoặc gộp vào một coder) khi có một trong các dấu hiệu:
-- cùng sửa một file, hoặc file sinh ra (generated) giống nhau;
-- phần B dùng module / API / component phần A tạo hoặc đổi;
-- ticket ghi "phụ thuộc" / "sau" phần kia;
-- migration / schema phải theo thứ tự; dùng chung config, fixture, global state;
-- code dùng chung theo `notes` của repo; hai coder độc lập dễ chọn thiết kế khác nhau cho cùng một thứ.
+## Dependencies (step 1)
+Consider each pair of work parts. They **must run sequentially** (or be merged into one coder) when any of these signs
+holds:
+- they edit the same file, or the same generated files;
+- part B uses a module / API / component that part A creates or changes;
+- the ticket says "depends on" / "after" the other part;
+- migrations / schema must go in order; shared config, fixtures, global state;
+- shared code per the repo's `notes`; two independent coders easily pick different designs for the same thing.
 
-**Mặc định nối tiếp**, chỉ song song khi chắc chắn độc lập. Việc nhỏ (dưới ~15 phút) làm nối tiếp. Không chia nhỏ việc
-chỉ để có nhiều worker. Kế hoạch chạy ghi dạng: `Song song 1: [A, B] → sau A: [C]`, kèm lý do mỗi chỗ nối tiếp.
+**Default to sequential**, run in parallel only when certainly independent. Small work (under ~15 minutes) runs
+sequentially. Do not split work just to have more workers. Write the run plan as: `Parallel 1: [A, B] → after A: [C]`,
+with the reason for each sequential point.
 
-## Review đối kháng (bước 3)
-- Reviewer chỉ báo 2 mức: **chặn** (lỗi đã chứng minh: sai logic, bảo mật, mất dữ liệu, vỡ API / hợp đồng) và
-  **gợi ý** (style, khẩu vị, "nên đầy đủ hơn", code thừa không gây lỗi). Gợi ý **không mở vòng sửa**, chỉ đưa vào tóm tắt.
-- Có lỗi chặn → giao **một worker skeptic** (vai `reviewer`): cố **bác bỏ** từng lỗi chặn —
-  xem chỗ gọi, code có chạy tới không, framework / chỗ khác đã xử lý chưa, chỉ là code test không. Trả mỗi lỗi một nhãn:
-  `CONFIRMED` (lỗi thật), `DOWNGRADED` (thành gợi ý), `DISPUTED` (bỏ), kèm bằng chứng.
-- Chỉ lỗi `CONFIRMED` gửi coder sửa (`send`). Coder sửa tối thiểu, kèm test fail với lỗi cũ và pass sau khi sửa.
-- Review lại chỉ **kiểm tra lỗi đã đóng chưa** (closed / not_closed / reopened) và phần vừa sửa, không đi tìm lỗi mới.
-- Dừng vòng sửa khi **không còn tiến bộ**: lỗi không thu hẹp, chỉ đổi tên lỗi, đổi agent, thêm test xanh không liên
-  quan → dừng, báo user kèm bằng chứng. Không đặt số vòng cố định.
+## Adversarial review (step 3)
+- The reviewer reports only 2 levels: **blocking** (proven bugs: wrong logic, security, data loss, broken API /
+  contract) and **suggestion** (style, taste, "should be more complete", redundant code that causes no bug).
+  Suggestions **do not open a fix round**, they only go into the summary.
+- Blocking issues exist → assign **one skeptic worker** (role `reviewer`): try to **refute** each blocking issue —
+  check the call sites, whether the code is reachable, whether the framework / elsewhere already handles it, whether
+  it is only test code. Give each issue a label: `CONFIRMED` (real bug), `DOWNGRADED` (becomes a suggestion),
+  `DISPUTED` (dropped), with evidence.
+- Only `CONFIRMED` issues are sent to the coder to fix (`send`). The coder fixes minimally, with a test that fails on
+  the old bug and passes after the fix.
+- Re-review only **checks whether the issues are closed** (closed / not_closed / reopened) and the just-fixed part,
+  it does not hunt for new issues.
+- Stop the fix rounds when **there is no more progress**: issues do not narrow, only get renamed, agents get swapped,
+  unrelated green tests get added → stop, tell the user with evidence. No fixed number of rounds.
 
-## Spec gửi worker phải có
-- Đọc file vai của nó (đường dẫn tuyệt đối) và phần `notes` liên quan.
-- Phạm vi được sửa (thư mục), phần không được đụng.
-- Tiêu chí xong; kết thúc bằng tóm tắt + danh sách file đã đổi.
+## The spec sent to a worker must have
+- Read its role file (absolute path) and the relevant `notes` part.
+- Scope it may edit (folders), parts it must not touch.
+- Done criteria; end with a summary + list of changed files.
 
-## Luật
-- Worker **không commit, không push**. Orchestrator gộp / commit khi user bảo; ngoại lệ duy nhất: commit local nhánh của
-  phần đã PASS để phần phụ thuộc làm tiếp (bước 2).
-- Song song tối đa 3 worker. Việc **trong worktree của một worker rảnh** (sửa lỗi review, việc làm tiếp trên chính worktree đó) giao
-  lại cho nó; phần khác mở worker mới (`modes.md` → Theo dõi).
-- Worker hỏi (`ask`) điều không suy ra được từ spec → hỏi user, không tự quyết.
+## Rules
+- Workers **do not commit, do not push**. The orchestrator merges / commits when the user says so; the only exception:
+  a local commit on the branch of a PASSED part so a dependent part can continue (step 2).
+- At most 3 workers in parallel. Work **in the worktree of an idle worker** (fixing review issues, follow-up on that
+  same worktree) goes back to it; other parts open a new worker (`modes.md` → Monitoring).
+- A worker asks (`ask`) something not derivable from the spec → ask the user, do not decide yourself.
