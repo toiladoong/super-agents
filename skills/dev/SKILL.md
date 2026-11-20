@@ -2,7 +2,7 @@
 name: dev
 description: Chạy một ticket / tính năng bằng nhóm worker Orca — orchestrator điều phối (research) → kế hoạch → coder → review → test; /dev plan chỉ lập kế hoạch (lưu .agents/plans/<ticket>.md) rồi dừng; /dev review cho code đã viết sẵn; /dev research chỉ tìm hiểu; /dev status xem worker nào đang làm / rảnh. Vai trò và AI lấy từ .agents/team.json của repo (mặc định Claude). Dùng khi user gọi /dev, hoặc bảo chia việc cho nhiều agent / worker Orca.
 ---
-# /dev <ticket hoặc mô tả> [--research]  ·  /dev plan [--here] <ticket>  ·  /dev research <câu hỏi>  ·  /dev review [--here] <ticket> [nhánh]  ·  /dev status
+# /dev <ticket hoặc mô tả> [--research]  ·  /dev plan [here] <ticket>  ·  /dev research <câu hỏi>  ·  /dev review [here] <ticket> [nhánh]  ·  /dev status
 
 `SKILL_DIR` = đường dẫn tuyệt đối của thư mục chứa file này. Vai mặc định ở `SKILL_DIR/roles/`, các chế độ phụ ở
 `SKILL_DIR/modes.md`.
@@ -10,9 +10,9 @@ description: Chạy một ticket / tính năng bằng nhóm worker Orca — orch
 ## Ai chạy skill này
 - **Prompt bắt đầu bằng "Bạn là orchestrator"** → bạn là orchestrator: đọc `SKILL_DIR/roles/orchestrator.md`, rồi làm theo luồng dưới đây.
 - **`/dev status`** → không mở tab orchestrator, làm theo mục "Theo dõi" trong `modes.md`.
-- **`plan` có cờ `--here`** → không mở tab orchestrator: bạn lập kế hoạch ngay tại tab này, theo mục "Chỉ lập kế hoạch" trong
+- **`plan` có cờ `here`** → không mở tab orchestrator: bạn lập kế hoạch ngay tại tab này, theo mục "Chỉ lập kế hoạch" trong
   `modes.md`.
-- **`review` có cờ `--here`** → không mở tab orchestrator: bạn là orchestrator ngay tại tab này, làm theo mục "Trong 1 tab" trong
+- **`review` có cờ `here`** → không mở tab orchestrator: bạn là orchestrator ngay tại tab này, làm theo mục "Trong 1 tab" trong
   `modes.md` (subagent thay cho worker Orca).
 - **Còn lại** (user gõ `/dev` trong phiên thường) → mở tab orchestrator rồi dừng, không tự làm luồng:
 

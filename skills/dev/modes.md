@@ -5,13 +5,13 @@ Chỉ chạy bước 0, không code. Orchestrator tách câu hỏi, giao researc
 (`file:dòng`, link), các lựa chọn và lựa chọn đề xuất, điều chưa chắc. User muốn làm tiếp → chạy luồng đầy đủ từ bước 1
 với kết quả này.
 
-## Chỉ lập kế hoạch: `/dev plan [--here] [--research] <ticket hoặc mô tả>`
+## Chỉ lập kế hoạch: `/dev plan [here] [--research] <ticket hoặc mô tả>`
 Chạy bước 0 (nếu cần) và bước 1 rồi **dừng**: không tạo worker coder / reviewer / tester, không sửa code.
 - Kế hoạch theo đúng bước 1 (phần việc, file dự kiến đổi, tiêu chí nghiệm thu, kế hoạch chạy + phụ thuộc, rủi ro gộp), ghi
   ra `.agents/plans/<tên>.md` ở gốc repo (tên theo mục "Ticket" trong `SKILL.md`). Đầu file ghi: ticket, ngày,
   nhánh / commit lúc lập, trạng thái `chờ duyệt`.
 - Hỏi user duyệt; user sửa thì sửa file. Duyệt xong đổi trạng thái thành `đã duyệt`. Không commit file khi user chưa bảo.
-- `--here`: không mở tab orchestrator, tab này làm (research bằng subagent nếu cần).
+- `here`: không mở tab orchestrator, tab này làm (research bằng subagent nếu cần).
 - Báo user: chạy `/dev <ticket>` để làm theo kế hoạch này.
 
 **`/dev <ticket>` khi đã có `.agents/plans/<ticket>.md`:** đọc file thay cho bước 0–1; nhánh / commit đã đổi nhiều thì
@@ -44,7 +44,7 @@ Giao việc mới: việc **trong worktree của một worker rảnh** (sửa l�
 worker đó (`worker-start --terminal <handle của nó>`). Phần khác cần worktree riêng → mở worker mới (không nhét vào
 worktree của phần khác), khi chưa đủ 3 worker.
 
-## Trong 1 tab: `--here` (vd. `/dev review --here [ticket] [nhánh]`, `/review --here`)
+## Trong 1 tab: `here` (vd. `/dev review here [ticket] [nhánh]`, `/review here`)
 Không mở tab orchestrator, không tạo worker Orca: **tab đang chạy là orchestrator**, các vai chạy bằng **subagent của
 Claude Code** (Agent tool) ngay trong tab, kết quả trả về tab. Chỉ có Claude (bỏ qua `agent` / `model` khác Claude trong
 `team.json`; model Claude thì truyền qua tham số `model` của Agent tool nếu có).
@@ -56,7 +56,7 @@ Claude Code** (Agent tool) ngay trong tab, kết quả trả về tab. Chỉ có
 - **Xác nhận trước khi sửa (bắt buộc):** review xong thì **dừng lượt**, báo bảng lỗi đánh số (chặn `CONFIRMED` trước,
   gợi ý sau; mỗi lỗi `file:dòng`, vì sao, cách sửa) và hỏi: sửa lỗi nào (vd. "sửa 1, 3", "sửa hết lỗi chặn", "không sửa").
   **Không sửa file nào** cho tới khi user trả lời; im lặng hay trả lời không rõ = không sửa. Mỗi vòng sửa sau cũng hỏi lại.
-  Trong Claude Code, mod của plugin chặn cứng Edit / Write tới khi user trả lời "sửa …" (mở đúng lượt đó; `--off` hoặc
+  Trong Claude Code, mod của plugin chặn cứng Edit / Write tới khi user trả lời "sửa …" (mở đúng lượt đó; `off` hoặc
   "xong review" thì tắt; khoá cũng tự tắt khi thấy dòng `✅ Review xong`, khi user trả lời "không sửa" / "bỏ qua", hoặc khi
   user gõ lệnh `/…` khác); bị từ chối thì báo bảng lỗi và hỏi, đừng thử lại hay sửa bằng Bash.
 - **Sửa:** chỉ đúng các lỗi user chọn. Tab này tự sửa (theo `roles/coder.md`: tối thiểu, kèm test tái hiện); rồi một

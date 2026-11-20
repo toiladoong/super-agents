@@ -14,13 +14,13 @@ export const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']
 export const DONE_MARKER = '✅ Review xong'
 
 export const DENY_REASON =
-  'super-agents review --here: chưa được sửa. Báo bảng lỗi đánh số và hỏi user sửa lỗi nào; chỉ sửa sau khi user trả lời "sửa …".'
+  'super-agents review here: chưa được sửa. Báo bảng lỗi đánh số và hỏi user sửa lỗi nào; chỉ sửa sau khi user trả lời "sửa …".'
 
 export function guardStatus(state: ReviewGuard): string | undefined {
   if (!state.isActive) return undefined
   return state.isTurnAllowed
-    ? '✏️ review --here: đang sửa các lỗi đã chọn'
-    : '🔒 review --here: chưa sửa file — trả lời "sửa 1, 3" / "sửa hết lỗi chặn" để cho phép'
+    ? '✏️ review here: đang sửa các lỗi đã chọn'
+    : '🔒 review here: chưa sửa file — trả lời "sửa 1, 3" / "sửa hết lỗi chặn" để cho phép'
 }
 
 export function isReviewSkill(skill: string): boolean {
@@ -51,8 +51,17 @@ export function finishesReview(answer: string): boolean {
 // `--off` ends it. Hooks on skill.prompt are bypassed for plugins, so the call is caught at the tool and the prompt.
 export function afterReviewCommand(state: ReviewGuard, skill: string, args: string): ReviewGuard {
   if (!isReviewSkill(skill)) return state
-  if (/--off\b/.test(args)) return OFF
-  return /--here\b/.test(args) ? { isActive: true, isTurnAllowed: false } : state
+  const mode = reviewMode(args)
+  if (mode === 'off') return OFF
+  return mode === 'here' ? { isActive: true, isTurnAllowed: false } : state
+}
+
+// The mode word of a review call: "here" / "off" as its first word (the old "--here" / "--off" anywhere still count).
+export function reviewMode(args: string): 'here' | 'off' | null {
+  const first = args.trim().split(/\s+/)[0]?.toLowerCase().replace(/^--/, '')
+  if (first === 'here' || first === 'off') return first
+  if (/--off\b/.test(args)) return 'off'
+  return /--here\b/.test(args) ? 'here' : null
 }
 
 // A typed "/super-agents:review …" (or "/review …"): the skill and its arguments, else null.

@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { DONE_MARKER, afterReviewCommand, confirmsFix, endsReview, isReviewSkill, movesOn, suggestionAfterTurn, typedReviewCommand } from '../hooks/review-guard'
+import { DONE_MARKER, afterReviewCommand, reviewMode, confirmsFix, endsReview, isReviewSkill, movesOn, suggestionAfterTurn, typedReviewCommand } from '../hooks/review-guard'
 
 test('reads the person’s answer', async () => {
   expect(confirmsFix('sửa 1, 3')).toBe(true)
@@ -23,6 +23,12 @@ test('reads the person’s answer', async () => {
   expect(afterReviewCommand(off, 'super-agents:review', '--here')).toEqual({ isActive: true, isTurnAllowed: false })
   expect(afterReviewCommand({ isActive: true, isTurnAllowed: false }, 'super-agents:review', '--off')).toEqual(off)
   expect(afterReviewCommand(off, 'super-agents:dev', '--here')).toEqual(off)
+  expect(reviewMode('here SG-1')).toBe('here')
+  expect(reviewMode(' off')).toBe('off')
+  expect(reviewMode('--here SG-1')).toBe('here')
+  expect(reviewMode('SG-1 --here')).toBe('here')
+  expect(reviewMode('SG-1 click here')).toBeNull()
+  expect(afterReviewCommand(off, 'super-agents:review', 'here')).toEqual({ isActive: true, isTurnAllowed: false })
 })
 
 test('edits wait for "sửa …" during review --here, one turn at a time', async ($, on) => {
@@ -31,7 +37,7 @@ test('edits wait for "sửa …" during review --here, one turn at a time', asyn
   on('prompt.submit', async ($, e) => e as never)
   on('turn.complete', async ($, e) => ({ text: e.answer }))
   const edit = () => $.tool.check({ tool: 'Edit', input: { file_path: 'a.ts', old_string: 'a', new_string: 'b' } })
-  await $.prompt.submit({ text: '/super-agents:review --here' })
+  await $.prompt.submit({ text: '/super-agents:review here' })
   expect((await edit()).decision).toBe('deny')
   await $.prompt.submit({ text: 'sửa 1' })
   expect((await edit()).decision).not.toBe('deny')
@@ -41,7 +47,7 @@ test('edits wait for "sửa …" during review --here, one turn at a time', asyn
   await $.turn.complete({ answer: `Nghiệm thu …
 ${DONE_MARKER}`, durationMs: 1, isAborted: false, turnId: 't2', reason: 'answer' } as never)
   expect((await edit()).decision).not.toBe('deny')
-  await $.prompt.submit({ text: '/super-agents:review --here' })
+  await $.prompt.submit({ text: '/super-agents:review here' })
   expect((await edit()).decision).toBe('deny')
   await $.prompt.submit({ text: '/office' })
   expect((await edit()).decision).not.toBe('deny')
@@ -65,7 +71,7 @@ test('during review --here the after-turn suggestion (what Orca shows) is the re
   })
   const endTurn = (answer: string) =>
     $.turn.complete({ answer, durationMs: 1, isAborted: false, turnId: 't', reason: 'answer' } as never)
-  await $.prompt.submit({ text: '/super-agents:review --here' })
+  await $.prompt.submit({ text: '/super-agents:review here' })
   await endTurn('Bảng lỗi …')
   await $.prompt.suggest({ text: 'engine guess' })
   expect(shown).toBe('sửa hết lỗi chặn')
