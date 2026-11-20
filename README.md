@@ -42,7 +42,7 @@ Cần: Orca đang chạy, `orca` CLI, skill `orchestration` của Orca (`orca sk
 | `/super-agents:review --here [ticket]` | Review gọn trong tab đang mở bằng subagent Claude, không mở tab / worker Orca. **Khoá sửa file** (thanh trạng thái 🔒) tới khi bạn trả lời "sửa 1, 3" / "sửa hết lỗi chặn"; mở đúng lượt đó rồi khoá lại |
 | `/super-agents:review --off` | Tắt khoá bằng tay (hoặc nói "xong review"). Thường không cần: khoá tự tắt khi review xong (dòng `✅ Review xong`), khi bạn trả lời "không sửa" / "bỏ qua", hoặc khi bạn gõ lệnh `/…` khác |
 
-Trong lúc review `--here`, khung chat trống hiện gợi ý mờ: xong lượt review là **"sửa hết lỗi chặn"**, xong lượt sửa là
+Trong lúc review `--here`, gợi ý sau mỗi lượt (khung chat Orca và khung prompt Claude Code) là câu trả lời tiếp theo: xong lượt review là **"sửa hết lỗi chặn"**, xong lượt sửa là
 **"xong review"**; bấm **Tab** (hoặc →) để lấy, sửa lại nếu cần (vd. "sửa 1, 3") rồi gửi.
 | `/super-agents:dev status` | Bảng worker đang làm / rảnh / chờ |
 

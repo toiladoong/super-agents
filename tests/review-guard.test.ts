@@ -49,3 +49,22 @@ test('suggests the next answer while the review runs', async () => {
 ${DONE_MARKER}`)).toBeNull()
   expect(suggestionAfterTurn({ isActive: false, isTurnAllowed: false }, '')).toBeNull()
 })
+
+test('during review --here the after-turn suggestion (what Orca shows) is the review’s next answer', async ($, on) => {
+  let shown = ''
+  on('skill.prompt', async ($, e) => ({ text: e.text }))
+  on('turn.complete', async ($, e) => ({ text: e.answer }))
+  on('prompt.suggest', async ($, e) => {
+    shown = e.text
+    return { isShown: true }
+  })
+  const endTurn = (answer: string) =>
+    $.turn.complete({ answer, durationMs: 1, isAborted: false, turnId: 't', reason: 'answer' } as never)
+  await $.skill.prompt({ skill: 'super-agents:review', text: 'ARGUMENTS: --here' })
+  await endTurn('Bảng lỗi …')
+  await $.prompt.suggest({ text: 'engine guess' })
+  expect(shown).toBe('sửa hết lỗi chặn')
+  await endTurn(`Nghiệm thu\n${DONE_MARKER}`)
+  await $.prompt.suggest({ text: 'engine guess' })
+  expect(shown).toBe('engine guess')
+})

@@ -14,6 +14,8 @@ const POLL_MS = 2000
 const STATE_TEXT = { working: 'đang làm', blocked: 'CẦN BẠN', waiting: 'đang chờ', done: 'xong' } as const
 
 const showHelp = atom({ plugin: 'super-agents', key: 'showHelp' } as const, true)
+// The answer to propose after the last turn while review --here runs; null otherwise.
+const reviewSuggestion = atom({ plugin: 'super-agents', key: 'reviewSuggestion' } as const, null as string | null)
 const reviewGuard = atom({ plugin: 'super-agents', key: 'reviewGuard' } as const, { isActive: false, isTurnAllowed: false })
 const view = atom({ plugin: 'super-agents', key: 'view' } as const, { agents: [], error: null, now: 0 })
 
@@ -51,6 +53,12 @@ export const register: Register = (on) => {
     return next(e)
   })
 
+  // Claude Code's own after-turn suggestion (what Orca's chat box shows): replaced by the review's next answer.
+  on('prompt.suggest', async ($, e, next) => {
+    const suggestion = await read($, reviewSuggestion)
+    return suggestion ? next({ ...e, text: suggestion }) : next(e)
+  })
+
   on('prompt.submit', async ($, e, next) => {
     const state = await read($, reviewGuard)
     const nextState = afterPrompt(state, e.text)
@@ -83,6 +91,7 @@ export const register: Register = (on) => {
       const nextGuard = afterTurn(guardState, e.answer)
       if (nextGuard !== guardState) await setReviewGuard($, nextGuard)
       const suggestion = suggestionAfterTurn(guardState, e.answer)
+      await update($, reviewSuggestion, () => suggestion)
       // The box takes a suggestion only once the turn has ended, so offer it a moment after.
       if (suggestion) $.clock.after(400, () => void $.prompt.suggest({ text: suggestion }))
     }

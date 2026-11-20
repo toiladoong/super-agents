@@ -15,6 +15,6 @@ export type OfficeView = { agents: OfficeAgent[]; error: string | null; now: num
 
 declare module 'claude-code' {
   interface PluginState {
-    'super-agents': { view: OfficeView; showHelp: boolean; reviewGuard: { isActive: boolean; isTurnAllowed: boolean } }
+    'super-agents': { view: OfficeView; showHelp: boolean; reviewGuard: { isActive: boolean; isTurnAllowed: boolean }; reviewSuggestion: string | null }
   }
 }
