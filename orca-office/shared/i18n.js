@@ -59,7 +59,7 @@
         <li>Giơ tay, bong bóng "!" đỏ: <b>cần bạn</b> (agent đang hỏi duyệt hoặc chờ trả lời)</li>
         <li>Bong bóng "…" và cốc cà phê: <b>đang chờ</b></li>
         <li>Dấu "✓", ngả ghế: <b>xong</b>, rời bàn sau 10 phút</li>
-        <li>Áo theo vai, chữ trên ngực: <b>O</b> tím orchestrator · <b>R</b> xanh dương researcher · <b>C</b> xanh lá coder · <b>V</b> cam reviewer · <b>S</b> vàng skeptic · <b>T</b> hồng tester · áo xám không chữ: chưa rõ vai</li>
+        <li>Áo theo vai, chữ trên ngực: <b>O</b> tím orchestrator · <b>RS</b> xanh dương researcher · <b>C</b> xanh lá coder · <b>RV</b> cam reviewer · <b>S</b> vàng skeptic · <b>T</b> hồng tester · áo xám không chữ: chưa rõ vai</li>
         <li>Màu tóc theo AI: cam Claude · đen Codex · xanh Antigravity · tím Cursor · nâu OpenCode</li>
         <li>Rê chuột lên bàn: tên, AI, vai, trạng thái, thời gian</li>
       </ul>
@@ -80,7 +80,7 @@
         <li>Hand raised, red "!" bubble: <b>needs you</b> (the agent is asking for approval or an answer)</li>
         <li>"…" bubble and a coffee cup: <b>waiting</b></li>
         <li>"✓", leaning back: <b>done</b>, leaves the desk after 10 minutes</li>
-        <li>Shirt by role, letter on the chest: <b>O</b> purple orchestrator · <b>R</b> blue researcher · <b>C</b> green coder · <b>V</b> orange reviewer · <b>S</b> yellow skeptic · <b>T</b> pink tester · grey with no letter: role unknown</li>
+        <li>Shirt by role, letter on the chest: <b>O</b> purple orchestrator · <b>RS</b> blue researcher · <b>C</b> green coder · <b>RV</b> orange reviewer · <b>S</b> yellow skeptic · <b>T</b> pink tester · grey with no letter: role unknown</li>
         <li>Hair by AI: orange Claude · black Codex · blue Antigravity · purple Cursor · brown OpenCode</li>
         <li>Hover a desk: name, AI, role, state, time</li>
       </ul>

@@ -80,7 +80,7 @@ runs `/ponytail:ponytail-debt` at acceptance.
 
 ## Agent Office (Orca plugin, optional): office panel + visual team.json editing
 The `orca-office/` panel: a pixel office in Orca's right sidebar, each agent is an employee at a desk. Shirt color by role,
-letter on the shirt chest (O orchestrator, R researcher, C coder, V reviewer, S skeptic, T tester);
+letter on the shirt chest (O orchestrator, RS researcher, C coder, RV reviewer, S skeptic, T tester);
 (read from the tab name: `coder · …`), hair by AI; typing = working, raised hand + "!" = needs you, "…" + coffee cup = waiting,
 "✓" = done (leaves the desk after 10 minutes). Hover over a desk to see the name, role, status, time.
 

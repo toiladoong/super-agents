@@ -7,7 +7,7 @@ export const OFFICE_HELP: Record<Lang, string> = {
 - Giơ tay, bong bóng "!" đỏ: **cần bạn** (Claude Code đang hỏi duyệt một tool)
 - Bong bóng "…" và cốc cà phê: **đang chờ** (xong lượt, chờ bạn hoặc chờ việc)
 - Dấu "✓", ngả ghế: **xong** — rời bàn sau 10 phút
-- Áo theo vai, chữ trên ngực: **O** tím orchestrator · **R** xanh dương researcher · **C** xanh lá coder · **V** cam reviewer · **S** vàng skeptic · **T** hồng tester · áo xám không chữ: chưa rõ vai
+- Áo theo vai, chữ trên ngực: **O** tím orchestrator · **RS** xanh dương researcher · **C** xanh lá coder · **RV** cam reviewer · **S** vàng skeptic · **T** hồng tester · áo xám không chữ: chưa rõ vai
 - Rê chuột lên bàn: mô tả, loại agent, tool vừa gọi
 
 **Dùng**
@@ -25,7 +25,7 @@ export const OFFICE_HELP: Record<Lang, string> = {
 - Hand raised, red "!" bubble: **needs you** (Claude Code is asking to approve a tool)
 - "…" bubble and a coffee cup: **waiting** (turn finished, waiting for you or for work)
 - "✓", leaning back: **done** — leaves the desk after 10 minutes
-- Shirt by role, letter on the chest: **O** purple orchestrator · **R** blue researcher · **C** green coder · **V** orange reviewer · **S** yellow skeptic · **T** pink tester · grey with no letter: role unknown
+- Shirt by role, letter on the chest: **O** purple orchestrator · **RS** blue researcher · **C** green coder · **RV** orange reviewer · **S** yellow skeptic · **T** pink tester · grey with no letter: role unknown
 - Hover a desk: description, agent type, last tool
 
 **Use**

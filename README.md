@@ -81,7 +81,7 @@ chạy `/ponytail:ponytail-debt` lúc nghiệm thu.
 
 ## Agent Office (plugin Orca, tuỳ chọn): panel văn phòng + sửa team.json trực quan
 Panel `orca-office/`: văn phòng pixel trong sidebar phải của Orca, mỗi agent là một nhân viên ngồi bàn. Màu áo theo vai,
-chữ cái trên ngực áo (O orchestrator, R researcher, C coder, V reviewer, S skeptic, T tester);
+chữ cái trên ngực áo (O orchestrator, RS researcher, C coder, RV reviewer, S skeptic, T tester);
 (đọc từ tên tab: `coder · …`), tóc theo AI; gõ phím = đang làm, giơ tay + "!" = cần bạn, "…" + cốc cà phê = đang chờ,
 "✓" = xong (rời bàn sau 10 phút). Rê chuột lên bàn để xem tên, vai, trạng thái, thời gian.
 

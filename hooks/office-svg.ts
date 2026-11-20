@@ -32,8 +32,8 @@ const HAIR: Record<string, string> = {
 }
 const SCREEN: Record<OfficeState, string> = { working: '#1d3b52', blocked: '#4a1f24', waiting: '#2a2d36', done: '#121316' }
 const SKIN = '#f1c27d'
-// A 3x5 pixel letter on the shirt per role (researcher and reviewer both start with R: reviewer is V).
-const ROLE_LETTER: Record<string, string> = { orchestrator: 'O', researcher: 'R', coder: 'C', reviewer: 'V', skeptic: 'S', tester: 'T' }
+// A 3x5 pixel letter or two on the shirt per role (researcher and reviewer both start with R: RS and RV).
+const ROLE_LETTER: Record<string, string> = { orchestrator: 'O', researcher: 'RS', coder: 'C', reviewer: 'RV', skeptic: 'S', tester: 'T' }
 const GLYPHS: Record<string, readonly string[]> = {
   O: ['111', '101', '101', '101', '111'],
   R: ['110', '101', '110', '101', '101'],
@@ -43,12 +43,19 @@ const GLYPHS: Record<string, readonly string[]> = {
   T: ['111', '010', '010', '010', '010']
 }
 
+// The role's letters on a shirt whose left edge is `x`, 4 pixels apart and centered on its 10 pixels.
 function roleLetter(x: number, y: number, role: string): string {
-  const glyph = GLYPHS[ROLE_LETTER[role] ?? '']
-  if (!glyph) return ''
   // Dark on the yellow skeptic shirt, white on the others.
   const ink = role === 'skeptic' ? '#2e3440' : '#ffffff'
-  return glyph.flatMap((row, dy) => [...row].map((bit, dx) => (bit === '1' ? rect(x + dx, y + dy, 1, 1, ink) : ''))).join('')
+  const letters = [...(ROLE_LETTER[role] ?? '')]
+  const left = x + Math.floor((10 - (letters.length * 4 - 1)) / 2)
+  return letters
+    .flatMap((letter, index) =>
+      (GLYPHS[letter] ?? []).flatMap((row, dy) =>
+        [...row].map((bit, dx) => (bit === '1' ? rect(left + index * 4 + dx, y + dy, 1, 1, ink) : ''))
+      )
+    )
+    .join('')
 }
 
 function rect(x: number, y: number, w: number, h: number, color: string, animation = ''): string {
@@ -92,7 +99,7 @@ function person(x: number, y: number, agent: OfficeAgent): string {
       rect(x + 7 + lean, y + 5, 1, 1, '#d9536f')
     )
   }
-  parts.push(roleLetter(x + 5, y + 9, agent.role))
+  parts.push(roleLetter(x + 2, y + 9, agent.role))
   if (agent.state === 'working') {
     // Typing: hands bob on the keyboard in turn.
     parts.push(

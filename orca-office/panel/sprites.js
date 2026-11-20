@@ -17,8 +17,8 @@
   const HAIR = { claude: '#c96442', codex: '#2b2b2b', antigravity: '#4285f4', cursor: '#4b4bd8', opencode: '#7a5230' }
   const SCREEN = { working: '#1d3b52', blocked: '#4a1f24', waiting: '#2a2d36', done: '#121316' }
   const SKIN = '#f1c27d'
-  // A 3x5 pixel letter on the shirt per role (researcher and reviewer both start with R: reviewer is V).
-  const ROLE_LETTER = { orchestrator: 'O', researcher: 'R', coder: 'C', reviewer: 'V', skeptic: 'S', tester: 'T' }
+  // A 3x5 pixel letter or two on the shirt per role (researcher and reviewer both start with R: RS and RV).
+  const ROLE_LETTER = { orchestrator: 'O', researcher: 'RS', coder: 'C', reviewer: 'RV', skeptic: 'S', tester: 'T' }
   const GLYPHS = {
     O: ['111', '101', '101', '101', '111'],
     R: ['110', '101', '110', '101', '101'],
@@ -77,12 +77,15 @@
       rect(ctx, x + 9 + lean, y - 2, 3, 2, '#ff8fb1')
       rect(ctx, x + 7 + lean, y + 5, 1, 1, '#d9536f')
     }
-    const glyph = GLYPHS[ROLE_LETTER[agent.role]]
-    if (glyph) {
-      // Dark on the yellow skeptic shirt, white on the others.
-      const ink = agent.role === 'skeptic' ? '#2e3440' : '#ffffff'
-      glyph.forEach((row, dy) => [...row].forEach((bit, dx) => bit === '1' && rect(ctx, x + 5 + dx, y + 9 + dy, 1, 1, ink)))
-    }
+    // Dark on the yellow skeptic shirt, white on the others; letters 4 pixels apart, centered on the 10-pixel shirt.
+    const ink = agent.role === 'skeptic' ? '#2e3440' : '#ffffff'
+    const letters = [...(ROLE_LETTER[agent.role] || '')]
+    const left = x + 2 + Math.floor((10 - (letters.length * 4 - 1)) / 2)
+    letters.forEach((letter, index) =>
+      GLYPHS[letter].forEach((row, dy) =>
+        [...row].forEach((bit, dx) => bit === '1' && rect(ctx, left + index * 4 + dx, y + 9 + dy, 1, 1, ink))
+      )
+    )
     if (agent.state === 'working') {
       // Typing: hands bob on the keyboard in turn.
       const up = tick % 2
