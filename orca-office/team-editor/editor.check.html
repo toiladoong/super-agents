@@ -15,6 +15,7 @@
       const original = '{\n  "_comment": "keep me",\n  "roles": { "coder": { "agent": "claude", "model": "opus" } },\n  "notes": ["a"]\n}\n'
       let written = original
       window.orca = {
+        plugin: { request: async (name) => (name === 'language.get' ? { language: 'vi' } : null) },
         document: {
           session: async ({ decode, encode }) => {
             const session = {

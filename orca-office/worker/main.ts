@@ -100,9 +100,9 @@ async function focusedWorkspace(orca: OrcaWorkerApi) {
 }
 
 // The panel's language: `language` in the focused workspace's team.json (the one the AI replies in), else the plugin
-// setting, else Vietnamese.
-async function panelLanguage(orca: OrcaWorkerApi): Promise<'vi' | 'en'> {
-  const { workspace } = await focusedWorkspace(orca).catch(() => ({ workspace: undefined }))
+// setting, else Vietnamese. `workspace`: the focused one when the caller already looked it up.
+async function panelLanguage(orca: OrcaWorkerApi, workspace?: { path: string }): Promise<'vi' | 'en'> {
+  workspace ??= (await focusedWorkspace(orca).catch(() => ({ workspace: undefined }))).workspace
   const teamJson = workspace ? await readFile(join(workspace.path, TEAM_PATH), 'utf8').catch(() => null) : null
   let language: unknown
   try {
@@ -118,8 +118,8 @@ export default function activate(orca: OrcaWorkerApi): void {
 
   // Opens the focused workspace's team.json; the panel shows the answer in the panel's language.
   orca.panels.handle('team.open', async () => {
-    const say = MESSAGES[await panelLanguage(orca)]
     const { context, workspace } = await focusedWorkspace(orca)
+    const say = MESSAGES[await panelLanguage(orca, workspace)]
     if (!context) return { opened: false, message: say.noWorkspace }
     if (!workspace) return { opened: false, message: say.noMatch(context.displayName) }
     try {

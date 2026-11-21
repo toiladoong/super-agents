@@ -105,7 +105,11 @@
   // again every few seconds (another workspace focused, team.json saved); onChange runs only when it changes.
   api.load = async function load(onChange) {
     const apply = async () => {
-      const answer = await orca.plugin.request('language.get').catch(() => null)
+      // No worker / plugin API (a self-check page, an older Orca) → keep the current language.
+      let answer = null
+      try {
+        answer = await orca.plugin.request('language.get')
+      } catch {}
       const lang = (answer ? answer.language : api.lang) === 'en' ? 'en' : 'vi'
       if (lang === api.lang) return false
       api.lang = lang
