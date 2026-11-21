@@ -18,6 +18,10 @@ export type Wallet = {
   checkedInOn?: string
   streak?: number
 }
+
+// Orca task statuses that end a task (still to do: pending, ready, dispatched, blocked, or any status Orca adds).
+const DONE_STATUSES = new Set(['completed', 'failed'])
+
 export type RunTasks = { id: string; tasks: { id: string; status: string }[] }
 
 export const NEW_WALLET: Wallet = { coins: START_COINS, paidTasks: {}, paidRuns: [] }
@@ -35,8 +39,10 @@ export function reward(wallet: Wallet, runs: RunTasks[]): { wallet: Wallet; earn
       paid.add(task.id)
       earned += TASK_COINS
     }
-    if (run.tasks.length && run.tasks.every((task) => task.status === 'completed')) {
-      earned += RUN_COINS
+    // A Run with no task left to do is settled: never asked about again, and the ticket bonus only when all succeeded
+    // (a cancelled task is `failed`).
+    if (run.tasks.length && run.tasks.every((task) => DONE_STATUSES.has(task.status))) {
+      if (run.tasks.every((task) => task.status === 'completed')) earned += RUN_COINS
       paidRuns.push(run.id)
       delete paidTasks[run.id]
     } else if (paid.size) {

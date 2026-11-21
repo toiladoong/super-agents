@@ -18,6 +18,14 @@ test('finished Orca work pays once: each completed task, and a ticket bonus when
   assert.equal(second.wallet.coins, START_COINS + 2 * TASK_COINS + RUN_COINS)
 
   assert.equal(reward(NEW_WALLET, [{ id: 'run_empty', tasks: [] }]).earned, 0)
+
+  // A cancelled worker leaves its task failed: the Run settles (no more asking), without the ticket bonus.
+  const cancelled = { id: 'run_c', tasks: [{ id: 'c1', status: 'completed' }, { id: 'c2', status: 'failed' }] }
+  const settled = reward(NEW_WALLET, [cancelled])
+  assert.equal(settled.earned, TASK_COINS)
+  assert.deepEqual(settled.wallet.paidRuns, ['run_c'])
+  const waiting = { id: 'run_d', tasks: [{ id: 'd1', status: 'failed' }, { id: 'd2', status: 'blocked' }] }
+  assert.deepEqual(reward(NEW_WALLET, [waiting]).wallet.paidRuns, [])
 })
 
 test('a daily check-in pays 10, 5 more each day in a row up to 50, once a day; a missed day starts over', () => {

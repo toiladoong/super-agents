@@ -177,7 +177,8 @@ export default function activate(orca: OrcaWorkerApi): void {
   // Pays the Orca tasks / Runs finished since the last sync.
   orca.panels.handle('wallet.sync', () =>
     withWallet(async (wallet) => {
-      const paid = reward(wallet, await unpaidRuns(wallet.paidRuns))
+      // The orca CLI failing pays nothing this time, but the wallet (coins, check-in) still comes back.
+      const paid = reward(wallet, await unpaidRuns(wallet.paidRuns).catch(() => []))
       return { wallet: paid.earned ? paid.wallet : wallet, answer: { ...walletView(paid.wallet), earned: paid.earned } }
     })
   )

@@ -26,11 +26,12 @@ CLAUDE_CONFIG_DIR="$HOME/.claude" claude plugin marketplace add toiladoong/super
 CLAUDE_CONFIG_DIR="$HOME/.claude" claude plugin install super-agents@super-agents
 ```
 
-Other AIs (Codex, opencode...) and the Orca panel need the code on the machine: `git clone https://github.com/toiladoong/super-agents.git`.
+Other AIs (Codex, opencode...) need the code on the machine: `git clone https://github.com/toiladoong/super-agents.git`.
 - Skill for other AIs: Orca's shared skill folder `~/.agents/skills/`. Windows:
   `New-Item -ItemType Junction -Path "$env:USERPROFILE\.agents\skills\dev" -Target "<clone folder>\skills\dev"`
   (macOS / Linux: `ln -s`). `orca skills installed` must show `dev` under "Agent skills home".
-- Agent Office panel: `orca plugin dev load <clone folder>/office` (see the Agent Office section below).
+- Agent Office panel in Orca (once per machine; Orca asks you to approve its access first):
+  `orca plugin install toiladoong/super-agents`.
 
 Requires: Orca running, the `orca` CLI, Orca's `orchestration` skill (`orca skills install --skill orchestration`).
 
@@ -91,8 +92,8 @@ it, three days kill it). Choosing or switching a pet / plant is free (bowls and 
 you start with 30. 📅 Check in once a day for 10 coins, 5 more for each day in a row (up to 50 a day); a missed day starts the streak over. The pet, plant and wallet live in the plugin's own storage (`storage:own`).
 
 ```
-orca plugin dev load <plugin folder>/office            # prints a fingerprint
-orca plugin dev load <plugin folder>/office --approve <fingerprint>
+orca plugin install toiladoong/super-agents                          # prints the fingerprint to approve
+orca plugin install toiladoong/super-agents --approve <fingerprint>
 orca plugin open local.super-agents-office
 ```
 
@@ -103,8 +104,14 @@ gpt-6.2-astra, gpt-6-astra, gpt-6.1-terra, gpt-6-luna; OpenCode: `provider/model
 For AIs without a suggestion list (Antigravity, Cursor), choose "default" or enter a name. Changing the AI clears the old model.
 Other keys in the file (such as `_comment`) are kept as-is.
 
-Logic checks: open `office/panel/agents.check.html` and `office/team-editor/editor.check.html` in a
-browser; the page title must be `PASS`; worker tests: `orca plugin test office`.
+Orca installs the newest `vX.Y.Z` tag (else the default branch) and stays on it; run the install again to update.
+While changing the plugin, load the clone itself: `orca plugin dev load <clone folder>` (`orca-plugin.json` at the repo
+root, code in `office/`). Releasing the panel: bump `version` in `orca-plugin.json` (kept equal to
+`.claude-plugin/plugin.json`), commit, `git tag v<version>`, `git push --tags`.
+
+Logic checks: open `office/panel/agents.check.html`, `office/panel/pets.check.html` and
+`office/team-editor/editor.check.html` in a browser; the page title must be `PASS`; worker tests:
+`orca plugin test office` (on the `office` folder, not the repo root: `tests/` holds the Claude Code tests).
 
 Permissions: the sandboxed panel reads agent state (`agent:read`); a small worker (`worker/main.ts`) lets the ⚙ Team button open the file, needs
 `workspace:read` + `workspace:write` and runs as a `trusted-worker` (Orca asks for approval on load). Shows agents of every workspace, the desk name is the session name (the worker reads `orca worktree ps`, refreshed every 3 seconds).

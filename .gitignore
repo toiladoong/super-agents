@@ -1,2 +1,5 @@
 # Claude Code writes its typings here when it loads the plugin
 .claude-plugin/types/
+
+# Orca writes its plugin typings here when it loads the Agent Office plugin
+.orca/

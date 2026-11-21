@@ -28,10 +28,14 @@
   let tick = 0
   const walk = { x: 30, target: 30, isFacingLeft: false, restUntil: 0 }
 
+  // A failed save would lose what was just paid for on the next open: say so.
   async function save() {
     try {
       await orca.storage.set(STORAGE_KEY, state)
-    } catch {}
+    } catch {
+      notice = i18n.t.corner.saveFailed
+      renderInfo()
+    }
   }
 
   function update(next) {

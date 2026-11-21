@@ -1,1 +1,1 @@
-{ "extends": "./.orca/types/tsconfig.json", "include": [".orca/types", "worker"] }
+{ "extends": "../.orca/types/tsconfig.json", "include": ["../.orca/types", "worker"] }

@@ -42,6 +42,7 @@
         price: (cost) => `${cost} xu`,
         notEnough: (cost) => `Chưa đủ xu (cần ${cost}). Hoàn thành việc trong Orca để kiếm thêm.`,
         earned: (count) => `+${count} xu nhờ việc vừa hoàn thành`,
+        saveFailed: 'Không lưu được góc thư giãn: mở lại panel có thể mất thay đổi vừa rồi.',
         checkIn: (count) => `📅 Điểm danh · +${count} xu`,
         checkedInToday: (streak) => `✅ Đã điểm danh · chuỗi ${streak} ngày`,
         checkedIn: (count, streak) => `Điểm danh: +${count} xu (chuỗi ${streak} ngày liên tiếp)`
@@ -87,6 +88,7 @@
         price: (cost) => `${cost} coins`,
         notEnough: (cost) => `Not enough coins (needs ${cost}). Finish work in Orca to earn more.`,
         earned: (count) => `+${count} coins for work just finished`,
+        saveFailed: 'Could not save the pet corner: reopening the panel may lose the last change.',
         checkIn: (count) => `📅 Check in · +${count}`,
         checkedInToday: (streak) => `✅ Checked in · ${streak}-day streak`,
         checkedIn: (count, streak) => `Check-in: +${count} coins (${streak} days in a row)`

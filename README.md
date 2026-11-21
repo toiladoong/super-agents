@@ -26,11 +26,16 @@ CLAUDE_CONFIG_DIR="$HOME/.claude" claude plugin marketplace add toiladoong/super
 CLAUDE_CONFIG_DIR="$HOME/.claude" claude plugin install super-agents@super-agents
 ```
 
-AI khác (Codex, opencode...) và panel Orca cần mã ở máy: `git clone https://github.com/toiladoong/super-agents.git`.
+Panel Agent Office trong Orca (mỗi máy một lần; Orca hỏi duyệt quyền rồi mới chạy):
+
+```
+orca plugin install toiladoong/super-agents
+```
+
+AI khác (Codex, opencode...) cần mã ở máy: `git clone https://github.com/toiladoong/super-agents.git`.
 - Skill cho AI khác: thư mục skill dùng chung của Orca `~/.agents/skills/`. Windows:
   `New-Item -ItemType Junction -Path "$env:USERPROFILE\.agents\skills\dev" -Target "<thư mục clone>\skills\dev"`
   (macOS / Linux: `ln -s`). `orca skills installed` phải thấy `dev` ở "Agent skills home".
-- Panel Agent Office: `orca plugin dev load <thư mục clone>/office` (xem mục Agent Office bên dưới).
 
 Cần: Orca đang chạy, `orca` CLI, skill `orchestration` của Orca (`orca skills install --skill orchestration`).
 
@@ -92,10 +97,17 @@ héo, quá 3 ngày thì chết). Chọn, đổi thú nuôi / cây miễn phí (b
 bắt đầu với 30 xu. Mỗi ngày bấm 📅 Điểm danh được 10 xu, mỗi ngày liên tiếp thêm 5 xu (tối đa 50 xu/ngày), bỏ một ngày thì chuỗi tính lại. Thú nuôi, cây và ví xu lưu trong bộ nhớ riêng của plugin (quyền `storage:own`).
 
 ```
-orca plugin dev load <thư mục plugin>/office            # in ra fingerprint
-orca plugin dev load <thư mục plugin>/office --approve <fingerprint>
+orca plugin install toiladoong/super-agents                          # in ra fingerprint cần duyệt
+orca plugin install toiladoong/super-agents --approve <fingerprint>
 orca plugin open local.super-agents-office
 ```
+
+Orca cài bản có tag `vX.Y.Z` mới nhất (không có tag thì nhánh chính) và giữ đúng bản đó; chạy lại lệnh cài để lên bản
+mới. Đang sửa plugin thì nạp thẳng thư mục clone: `orca plugin dev load <thư mục clone>` (file `orca-plugin.json` ở gốc
+repo, mã ở `office/`).
+
+Phát hành panel: tăng `version` trong `orca-plugin.json` (giữ bằng `version` của `.claude-plugin/plugin.json`), commit,
+`git tag v<version>`, `git push --tags`.
 
 **Sửa team trực quan:** bấm nút **⚙ Team** trên panel Agent Office (mở `.agents/team.json` của workspace đang mở; repo chưa có thì tạo từ `team.default.json` của plugin, chưa commit), hoặc mở `.agents/team.json` (hoặc `team.default.json`) trong Orca, chọn **Team** ở nút chuyển
 bên cạnh Source. Mỗi vai một dòng (hình nhân viên xem trước, AI, model, file vai), các luật `notes` sửa / thêm / xoá
@@ -104,8 +116,9 @@ gpt-6.2-astra, gpt-6-astra, gpt-6.1-terra, gpt-6-luna; OpenCode: `provider/model
 AI không có trong danh sách gợi ý (Antigravity, Cursor) thì chọn "mặc định" hoặc nhập tên. Đổi AI thì model cũ tự xoá.
 Các khoá khác trong file (như `_comment`) giữ nguyên.
 
-Kiểm tra logic: mở `office/panel/agents.check.html` và `office/team-editor/editor.check.html` trong trình
-duyệt, tiêu đề trang phải là `PASS`; test của worker: `orca plugin test office`.
+Kiểm tra logic: mở `office/panel/agents.check.html`, `office/panel/pets.check.html` và
+`office/team-editor/editor.check.html` trong trình duyệt, tiêu đề trang phải là `PASS`; test của worker:
+`orca plugin test office` (chạy ở thư mục `office`, không chạy ở gốc repo vì `tests/` là test của Claude Code).
 
 Quyền: panel sandbox đọc trạng thái agent (`agent:read`); worker nhỏ (`worker/main.ts`) để nút ⚙ Team mở file, cần
 `workspace:read` + `workspace:write` và chạy dạng `trusted-worker` (Orca hỏi duyệt khi nạp). Hiện agent của mọi workspace, tên bàn là tên phiên (worker đọc `orca worktree ps`, cập nhật mỗi 3 giây).
