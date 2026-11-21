@@ -30,8 +30,9 @@ Other AIs (Codex, opencode...) need the code on the machine: `git clone https://
 - Skill for other AIs: Orca's shared skill folder `~/.agents/skills/`. Windows:
   `New-Item -ItemType Junction -Path "$env:USERPROFILE\.agents\skills\dev" -Target "<clone folder>\skills\dev"`
   (macOS / Linux: `ln -s`). `orca skills installed` must show `dev` under "Agent skills home".
-- Agent Office panel in Orca (once per machine; Orca asks you to approve its access first):
-  `orca plugin install toiladoong/super-agents`.
+- Agent Office panel in Orca (once per machine): open the install link and confirm in Orca (**Add catalog** →
+  **Review & Install** → approve its access): `start "orca://plugins/toiladoong.super-agents-office?catalog=https://github.com/toiladoong/super-agents.git"` (Windows; macOS `open`, Linux `xdg-open`), or run
+  `orca plugin install toiladoong/super-agents` (prints a fingerprint, run again with `--approve <fingerprint>`).
 
 Requires: Orca running, the `orca` CLI, Orca's `orchestration` skill (`orca skills install --skill orchestration`).
 
@@ -107,7 +108,8 @@ Other keys in the file (such as `_comment`) are kept as-is.
 Orca installs the newest `vX.Y.Z` tag (else the default branch) and stays on it; run the install again to update.
 While changing the plugin, load the clone itself: `orca plugin dev load <clone folder>` (`orca-plugin.json` at the repo
 root, code in `office/`). Releasing the panel: bump `version` in `orca-plugin.json` (kept equal to
-`.claude-plugin/plugin.json`), commit, `git tag v<version>`, `git push --tags`.
+`.claude-plugin/plugin.json`), commit, `git tag v<version>`, `git push --tags`; then put the output of
+`orca plugin release-entry .` first in `releases` of `orca-catalog.json` (the catalog the install link reads), commit, push.
 
 Logic checks: open `office/panel/agents.check.html`, `office/panel/pets.check.html` and
 `office/team-editor/editor.check.html` in a browser; the page title must be `PASS`; worker tests:

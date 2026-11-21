@@ -26,11 +26,15 @@ CLAUDE_CONFIG_DIR="$HOME/.claude" claude plugin marketplace add toiladoong/super
 CLAUDE_CONFIG_DIR="$HOME/.claude" claude plugin install super-agents@super-agents
 ```
 
-Panel Agent Office trong Orca (mỗi máy một lần; Orca hỏi duyệt quyền rồi mới chạy):
+Panel Agent Office trong Orca (mỗi máy một lần). Mở link cài, Orca hiện hộp xác nhận: **Add catalog** → **Review &
+Install** → duyệt quyền:
 
 ```
-orca plugin install toiladoong/super-agents
+start "orca://plugins/toiladoong.super-agents-office?catalog=https://github.com/toiladoong/super-agents.git"    # Windows (macOS: open, Linux: xdg-open)
 ```
+
+Hoặc cài bằng lệnh: `orca plugin install toiladoong/super-agents` (lần đầu in fingerprint, chạy lại với
+`--approve <fingerprint>`).
 
 AI khác (Codex, opencode...) cần mã ở máy: `git clone https://github.com/toiladoong/super-agents.git`.
 - Skill cho AI khác: thư mục skill dùng chung của Orca `~/.agents/skills/`. Windows:
@@ -107,7 +111,8 @@ mới. Đang sửa plugin thì nạp thẳng thư mục clone: `orca plugin dev 
 repo, mã ở `office/`).
 
 Phát hành panel: tăng `version` trong `orca-plugin.json` (giữ bằng `version` của `.claude-plugin/plugin.json`), commit,
-`git tag v<version>`, `git push --tags`.
+`git tag v<version>`, `git push --tags`; rồi `orca plugin release-entry .` và chép kết quả lên đầu `releases` trong
+`orca-catalog.json` (danh mục mà link cài đọc), commit, push.
 
 **Sửa team trực quan:** bấm nút **⚙ Team** trên panel Agent Office (mở `.agents/team.json` của workspace đang mở; repo chưa có thì tạo từ `team.default.json` của plugin, chưa commit), hoặc mở `.agents/team.json` (hoặc `team.default.json`) trong Orca, chọn **Team** ở nút chuyển
 bên cạnh Source. Mỗi vai một dòng (hình nhân viên xem trước, AI, model, file vai), các luật `notes` sửa / thêm / xoá
