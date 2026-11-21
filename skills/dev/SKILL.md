@@ -2,7 +2,7 @@
 name: dev
 description: Run a ticket / feature with a team of Orca workers — the orchestrator coordinates (research) → plan → coder → review → test; /dev plan only makes the plan (saved to .agents/plans/<ticket>.md) then stops; /dev review for code already written; /dev research only investigates; /dev status shows which workers are busy / idle. Roles and AIs come from the repo's .agents/team.json (default Claude). Use when the user calls /dev, or asks to split work across several agents / Orca workers.
 ---
-# /dev <ticket or description> [--research]  ·  /dev plan [here] <ticket>  ·  /dev research <question>  ·  /dev review [here] <ticket> [branch]  ·  /dev status
+# /dev <ticket or description> [--research] [--env <name|url>]  ·  /dev plan [here] <ticket>  ·  /dev research <question>  ·  /dev review [here] <ticket> [branch] [--env <name|url>]  ·  /dev status
 
 `SKILL_DIR` = absolute path of the folder holding this file. Default roles are in `SKILL_DIR/roles/`, secondary modes
 in `SKILL_DIR/modes.md`.
@@ -36,6 +36,9 @@ Read `.agents/team.json` at the repo root; if missing, use `SKILL_DIR/team.defau
   Role missing from the file → `agent: claude`, no `--model`. Role missing `role` → `SKILL_DIR/roles/<role>.md`.
 - `notes`: the repo's own rules (shared folders, resources only the tester uses, skills to read...). The orchestrator
   reads and applies them when splitting work, copying the relevant part into each worker's spec.
+- `environments` (optional): real environments the tester may test on, name → URL, e.g.
+  `{ "staging": "https://staging.example.com", "prod": "https://example.com" }`. `--env <name>` picks one, `--env <url>`
+  gives a URL directly. Accounts and limits for each environment go in `notes`.
 - `language`: `vi` (default) or `en` — the language every reply to the user, every spec / plan file and every message
   to workers uses. Instructions here are in English; replies follow `language`.
 
@@ -84,7 +87,10 @@ The ticket argument is a key (e.g. `SG-30200`), a link (Jira, Figma…) or a tex
    spec also says "run `/ponytail:ponytail-review` on the diff first". Then follow the "Adversarial review" section
    below.
 4. **Test**: **one** `tester` worker, testing each worktree **in turn**. The spec gives worktree + branch and the
-   acceptance criteria.
+   acceptance criteria. With `--env` → the tester tests that real environment (URL, its notes) instead of a local
+   build, per "Real environment" in the tester role; the spec names the environment and the commit it must run. Code
+   not deployed there yet (the usual case in a full `/dev` run) → test locally first, then ask the user whether to
+   test the environment once it is deployed.
 5. **Acceptance**: summarize for the user (changes, review, test table). With ponytail: `/ponytail:ponytail-debt` on
    each worktree, put the `shortcut:` items in the summary. **Ask the user to approve** before merging. Merge **one
    branch at a time**, depended-on parts first; conflict → stop, tell the user, do not resolve it yourself.

@@ -50,6 +50,7 @@ in both languages (e.g. "sửa 1, 3" / "fix 1, 3", "không sửa" / "skip").
 | `/super-agents:review [ticket] [branch]` | Shortcut for the row above: review only (no arguments = uncommitted changes) |
 | `/super-agents:review here [ticket]` | Compact review in the current tab with a Claude subagent, no Orca tab / worker opened. **File edits are locked** (status bar 🔒) until you answer "sửa 1, 3" / "fix 1, 3" or "sửa hết lỗi chặn" / "fix all blocking"; unlocked for exactly that turn, then locked again |
 | `/super-agents:review off` | Turn the lock off manually (or say "xong review" / "done review"). Usually not needed: the lock turns off by itself when the review is done (the `✅ Review xong` / `✅ Review done` line), when you answer "không sửa" / "skip" or "bỏ qua" / "ignore", or when you type another `/…` command |
+| `--env <name\|url>` (added to `dev` / `review`) | The tester tests a real environment (e.g. a staging / production web domain) instead of a local build. Names come from `environments` in `.agents/team.json`: `{ "staging": "https://…" }`. The tester first checks the environment runs the build under test; test accounts only, no payments / deleting / changing real data, production is look-only |
 | `/super-agents:dev status` | Table of workers busy / idle / waiting |
 
 During a `here` review, the suggestion after each turn (Orca chat box and Claude Code prompt box) is the next answer: after a review turn it is **"sửa hết lỗi chặn"** / **"fix all blocking"**, after a fix turn it is

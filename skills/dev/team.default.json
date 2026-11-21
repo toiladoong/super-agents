@@ -1,5 +1,5 @@
 {
-  "_comment": "Mặc định khi repo không có .agents/team.json. Chép file này vào <repo>/.agents/team.json để chỉnh. agent: id Orca (claude, codex, antigravity, cursor, opencode...). model: tuỳ chọn, tên model của chính AI đó. role: file vai (tính từ gốc repo), bỏ trống = vai mặc định của plugin. notes: luật riêng của repo cho orchestrator. language: vi (mặc định) hoặc en — ngôn ngữ AI trả lời, viết kế hoạch và báo cáo.",
+  "_comment": "Mặc định khi repo không có .agents/team.json. Chép file này vào <repo>/.agents/team.json để chỉnh. agent: id Orca (claude, codex, antigravity, cursor, opencode...). model: tuỳ chọn, tên model của chính AI đó. role: file vai (tính từ gốc repo), bỏ trống = vai mặc định của plugin. notes: luật riêng của repo cho orchestrator. language: vi (mặc định) hoặc en — ngôn ngữ AI trả lời, viết kế hoạch và báo cáo. environments: môi trường thật để test bằng --env <tên>, tên → URL.",
   "language": "vi",
   "roles": {
     "orchestrator": {
@@ -23,5 +23,6 @@
       "model": "sonnet"
     }
   },
+  "environments": {},
   "notes": []
 }
