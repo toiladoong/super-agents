@@ -92,7 +92,7 @@ orca plugin dev load <thư mục plugin>/orca-office --approve <fingerprint>
 orca plugin open local.super-agents-office
 ```
 
-**Sửa team trực quan:** bấm nút **⚙ Team** trên panel Agent Office (mở `.agents/team.json` của workspace đang mở), hoặc mở `.agents/team.json` (hoặc `team.default.json`) trong Orca, chọn **Team** ở nút chuyển
+**Sửa team trực quan:** bấm nút **⚙ Team** trên panel Agent Office (mở `.agents/team.json` của workspace đang mở; repo chưa có thì tạo từ `team.default.json` của plugin, chưa commit), hoặc mở `.agents/team.json` (hoặc `team.default.json`) trong Orca, chọn **Team** ở nút chuyển
 bên cạnh Source. Mỗi vai một dòng (hình nhân viên xem trước, AI, model, file vai), các luật `notes` sửa / thêm / xoá
 được. AI và model chọn bằng danh sách; model có gợi ý theo AI (Claude: opus / sonnet / haiku; Codex: gpt-6.2-sol,
 gpt-6.2-astra, gpt-6-astra, gpt-6.1-terra, gpt-6-luna; OpenCode: `provider/model`) và mục "nhập tên khác…".

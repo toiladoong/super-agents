@@ -3,18 +3,21 @@
 // Orca transpiles this file when it loads: no build step.
 import { execFile } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { readFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import type { OrcaWorkerApi } from 'orca/worker'
 
 const TEAM_PATH = '.agents/team.json'
+// The super-agents defaults, next to this plugin in the same repo (missing when only this folder was installed).
+const DEFAULT_TEAM_URL = new URL('../../skills/dev/team.default.json', import.meta.url)
 
 const MESSAGES = {
   vi: {
     noWorkspace: 'Chưa có workspace nào đang mở.',
     noMatch: (name: string) => `Không tìm thấy workspace "${name}".`,
     opened: `Đã mở ${TEAM_PATH}. Nếu đang hiện JSON, chọn "Team" ở nút chuyển cạnh Source.`,
+    created: `Repo chưa có ${TEAM_PATH}: đã tạo từ bản mặc định của super-agents (chưa commit) và mở ra.`,
     failed: (reason: string) =>
       `Không mở được ${TEAM_PATH} (${reason}). Repo chưa có file này thì chép team.default.json của plugin super-agents vào.`
   },
@@ -22,6 +25,7 @@ const MESSAGES = {
     noWorkspace: 'No workspace is open.',
     noMatch: (name: string) => `Workspace "${name}" not found.`,
     opened: `Opened ${TEAM_PATH}. If it shows JSON, pick "Team" in the toggle next to Source.`,
+    created: `The repo had no ${TEAM_PATH}: created it from the super-agents defaults (not committed) and opened it.`,
     failed: (reason: string) =>
       `Could not open ${TEAM_PATH} (${reason}). If the repo has no such file, copy the super-agents plugin's team.default.json there.`
   }
@@ -112,6 +116,18 @@ async function panelLanguage(orca: OrcaWorkerApi, workspace?: { path: string }):
   return language === 'en' ? 'en' : 'vi'
 }
 
+// A repo without team.json gets the plugin's defaults, so the Team editor has something to edit. Only on this machine:
+// a remote (SSH) workspace's path is not a local folder. 'wx' never overwrites a file made in the meantime.
+async function createTeamFile(workspace: { path: string; hostId: string | null }): Promise<boolean> {
+  const teamFile = join(workspace.path, TEAM_PATH)
+  if ((workspace.hostId ?? 'local') !== 'local' || existsSync(teamFile)) return false
+  const defaults = await readFile(DEFAULT_TEAM_URL, 'utf8').catch(() => null)
+  if (!defaults) return false
+  await mkdir(dirname(teamFile), { recursive: true })
+  await writeFile(teamFile, defaults, { flag: 'wx' })
+  return true
+}
+
 export default function activate(orca: OrcaWorkerApi): void {
   orca.panels.handle('agents.snapshot', async () => ({ agents: await agentsSnapshot() }))
   orca.panels.handle('language.get', async () => ({ language: await panelLanguage(orca) }))
@@ -123,8 +139,9 @@ export default function activate(orca: OrcaWorkerApi): void {
     if (!context) return { opened: false, message: say.noWorkspace }
     if (!workspace) return { opened: false, message: say.noMatch(context.displayName) }
     try {
+      const isCreated = await createTeamFile(workspace)
       await orca.host.call('editor.open', { workspaceId: workspace.id, path: TEAM_PATH })
-      return { opened: true, message: say.opened }
+      return { opened: true, message: isCreated ? say.created : say.opened }
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error)
       return { opened: false, message: say.failed(reason) }

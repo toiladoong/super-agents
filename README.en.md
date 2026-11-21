@@ -91,7 +91,7 @@ orca plugin dev load <plugin folder>/orca-office --approve <fingerprint>
 orca plugin open local.super-agents-office
 ```
 
-**Visual team editing:** click the **⚙ Team** button on the Agent Office panel (opens `.agents/team.json` of the open workspace), or open `.agents/team.json` (or `team.default.json`) in Orca, choose **Team** on the toggle
+**Visual team editing:** click the **⚙ Team** button on the Agent Office panel (opens `.agents/team.json` of the open workspace; a repo without one gets it created from the plugin's `team.default.json`, not committed), or open `.agents/team.json` (or `team.default.json`) in Orca, choose **Team** on the toggle
 next to Source. One row per role (employee preview, AI, model, role file); the `notes` rules can be edited / added / removed.
 AI and model are picked from lists; model has suggestions per AI (Claude: opus / sonnet / haiku; Codex: gpt-6.2-sol,
 gpt-6.2-astra, gpt-6-astra, gpt-6.1-terra, gpt-6-luna; OpenCode: `provider/model`) and a "type another name…" item.
