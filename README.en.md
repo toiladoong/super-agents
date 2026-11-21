@@ -86,7 +86,7 @@ letter on the shirt chest (O orchestrator, RS researcher, C coder, RV reviewer, 
 "✓" = done (leaves the desk after 10 minutes). Hover over a desk to see the name, role, status, time.
 
 **Pet corner** under the office: keep a dog / cat / mouse / bird (feed it, fill its water; hungry or thirsty, it waits by
-the bowl) and a plant (cactus, sunflower, pothos, rose: water it to grow it up to flowering; a day without water wilts
+the bowl; a bowl empty for a day and it runs away) and a plant (cactus, sunflower, pothos, rose: water it to grow it up to flowering; a day without water wilts
 it). Everything costs coins: each worker task finished in Orca +10, a whole ticket done (every task of its Run) +30 more;
 you start with 30. The pet, plant and wallet live in the plugin's own storage (`storage:own`).
 

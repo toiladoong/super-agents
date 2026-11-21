@@ -34,6 +34,8 @@
         water: '🚿 Tưới cây',
         petInfo: (name, food, water) => `${name}: no ${food}%, nước ${water}%`,
         plantInfo: (name, stage, isDry) => `${name}: ${stage}${isDry ? ', khô héo, cần tưới' : ''}`,
+        leftHome: (name) => `${name} đã bỏ nhà ra đi vì bị bỏ đói quá lâu. Nhận nuôi con khác nhé.`,
+        starving: (hours) => `đói lả! Còn ${hours} giờ không cho ăn uống là bỏ nhà đi`,
         coins: (count) => `🪙 ${count} xu`,
         price: (cost) => `${cost} xu`,
         notEnough: (cost) => `Chưa đủ xu (cần ${cost}). Hoàn thành việc trong Orca để kiếm thêm.`,
@@ -72,6 +74,8 @@
         water: '🚿 Water plant',
         petInfo: (name, food, water) => `${name}: food ${food}%, water ${water}%`,
         plantInfo: (name, stage, isDry) => `${name}: ${stage}${isDry ? ', wilting, needs water' : ''}`,
+        leftHome: (name) => `The ${name.toLowerCase()} ran away from home after going hungry too long. Adopt another one.`,
+        starving: (hours) => `starving! ${hours} more hours without food or water and it runs away`,
         coins: (count) => `🪙 ${count} coins`,
         price: (cost) => `${cost} coins`,
         notEnough: (cost) => `Not enough coins (needs ${cost}). Finish work in Orca to earn more.`,
@@ -90,7 +94,7 @@
         <li>Áo theo vai, chữ trên ngực: <b>O</b> tím orchestrator · <b>RS</b> xanh dương researcher · <b>C</b> xanh lá coder · <b>RV</b> cam reviewer · <b>S</b> vàng skeptic · <b>T</b> hồng tester · áo xám không chữ: chưa rõ vai</li>
         <li>Màu tóc theo AI: cam Claude · đen Codex · xanh Antigravity · tím Cursor · nâu OpenCode</li>
         <li>Rê chuột lên bàn: tên, AI, vai, trạng thái, thời gian</li>
-        <li>Góc thư giãn: nuôi chó / mèo / chuột / chim (cho ăn, cho uống; đói hay khát thì nó ra ngồi chờ bên bát) và trồng cây (tưới để lớn dần tới khi ra hoa, quá 1 ngày không tưới thì héo). Mọi thứ trả bằng xu: mỗi việc worker xong +10 xu, cả ticket xong (mọi việc của Run) thưởng thêm 30 xu</li>
+        <li>Góc thư giãn: nuôi chó / mèo / chuột / chim (cho ăn, cho uống; đói hay khát thì nó ra ngồi chờ bên bát; bát cạn quá 1 ngày thì nó bỏ nhà ra đi) và trồng cây (tưới để lớn dần tới khi ra hoa, quá 1 ngày không tưới thì héo). Mọi thứ trả bằng xu: mỗi việc worker xong +10 xu, cả ticket xong (mọi việc của Run) thưởng thêm 30 xu</li>
       </ul>
       <ul>
         <li>Hiện agent của mọi workspace trong Orca, tên bàn là tên phiên (như ở sidebar Orca); cập nhật mỗi 3 giây.</li>
@@ -113,7 +117,7 @@
         <li>Shirt by role, letter on the chest: <b>O</b> purple orchestrator · <b>RS</b> blue researcher · <b>C</b> green coder · <b>RV</b> orange reviewer · <b>S</b> yellow skeptic · <b>T</b> pink tester · grey with no letter: role unknown</li>
         <li>Hair by AI: orange Claude · black Codex · blue Antigravity · purple Cursor · brown OpenCode</li>
         <li>Hover a desk: name, AI, role, state, time</li>
-        <li>Pet corner: keep a dog / cat / mouse / bird (feed it, fill its water; hungry or thirsty, it waits by the bowl) and a plant (water it to grow it up to flowering; a day without water wilts it). Everything costs coins: each finished worker task +10, a whole ticket done (every task of its Run) +30 more</li>
+        <li>Pet corner: keep a dog / cat / mouse / bird (feed it, fill its water; hungry or thirsty, it waits by the bowl; a bowl empty for a day and it runs away) and a plant (water it to grow it up to flowering; a day without water wilts it). Everything costs coins: each finished worker task +10, a whole ticket done (every task of its Run) +30 more</li>
       </ul>
       <ul>
         <li>Shows the agents of every Orca workspace; a desk is named after its session (as in Orca's sidebar); updated every 3 seconds.</li>

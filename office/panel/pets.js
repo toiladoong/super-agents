@@ -1,13 +1,15 @@
 // The pet corner under the office: a pet (dog, cat, mouse, bird) to feed and give water, and a plant to water so it
 // grows. State lives in the plugin's storage, so it survives Orca restarts; levels are worked out from timestamps.
 // Everything costs coins, earned when Orca work finishes (the worker's wallet: worker/wallet.ts).
-// Exposes window.petCorner = { needs, feed, drink, water, choosePet, choosePlant, handleLanguageChanged }.
+// Left hungry or thirsty too long, the pet leaves home.
+// Exposes window.petCorner = { needs, feed, drink, water, choosePet, choosePlant, runAway, handleLanguageChanged }.
 ;(function () {
   const HOUR = 60 * 60 * 1000
   const FOOD_MS = 8 * HOUR // a full bowl lasts this long
   const DRINK_MS = 6 * HOUR
   const DRY_MS = 24 * HOUR // a plant not watered for this long wilts (and grows no more until watered)
   const GROW_MS = 4 * HOUR // watering at least this long after its last growth grows the plant one stage
+  const LEAVE_MS = 24 * HOUR // an empty food or water bowl for this long: the pet leaves home
   const LOW = 0.3
   const HAPPY_MS = 4000 // the heart after feeding / watering
   const HEIGHT = 30
@@ -22,19 +24,34 @@
     water: 1
   }
 
-  const EMPTY = { pet: 'none', fedAt: 0, drankAt: 0, plant: 'none', stage: 0, wateredAt: 0, grewAt: 0 }
+  const EMPTY = { pet: 'none', leftPet: null, fedAt: 0, drankAt: 0, plant: 'none', stage: 0, wateredAt: 0, grewAt: 0 }
 
   const level = (at, span, now) => Math.min(1, Math.max(0, 1 - (now - at) / span))
 
   function needs(state, now) {
     const food = level(state.fedAt, FOOD_MS, now)
     const water = level(state.drankAt, DRINK_MS, now)
-    return { food, water, isHungry: food < LOW, isThirsty: water < LOW, isDry: now - state.wateredAt > DRY_MS }
+    // Since when the first bowl has been empty (in the future while both still have some).
+    const emptySince = Math.min(state.fedAt + FOOD_MS, state.drankAt + DRINK_MS)
+    return {
+      food,
+      water,
+      isHungry: food < LOW,
+      isThirsty: water < LOW,
+      isDry: now - state.wateredAt > DRY_MS,
+      leavesIn: emptySince + LEAVE_MS - now
+    }
+  }
+
+  // The pet gone when a bowl has been empty for LEAVE_MS; `leftPet` remembers who left, for the message.
+  function runAway(state, now) {
+    if (state.pet === 'none' || needs(state, now).leavesIn > 0) return state
+    return { ...state, pet: 'none', leftPet: state.pet }
   }
 
   const feed = (state, now) => ({ ...state, fedAt: now })
   const drink = (state, now) => ({ ...state, drankAt: now })
-  const choosePet = (state, pet, now) => ({ ...state, pet, fedAt: now, drankAt: now })
+  const choosePet = (state, pet, now) => ({ ...state, pet, leftPet: null, fedAt: now, drankAt: now })
   const choosePlant = (state, plant, now) => ({ ...state, plant, stage: 0, wateredAt: now, grewAt: now })
 
   // A cared-for plant grows a stage per watering, at most one every GROW_MS; a dry one only recovers.
@@ -43,7 +60,7 @@
     return { ...state, wateredAt: now, ...(canGrow ? { stage: state.stage + 1, grewAt: now } : {}) }
   }
 
-  window.petCorner = { needs, feed, drink, water, choosePet, choosePlant, handleLanguageChanged: () => {} }
+  window.petCorner = { needs, feed, drink, water, choosePet, choosePlant, runAway, handleLanguageChanged: () => {} }
 
   const canvas = document.getElementById('corner')
   if (!canvas) return
@@ -143,9 +160,11 @@
   function renderInfo() {
     const t = i18n.t.corner
     const now = Date.now()
-    const { food, water: drinkLevel, isDry } = needs(state, now)
+    const { food, water: drinkLevel, isDry, leavesIn } = needs(state, now)
     const parts = []
+    if (state.leftPet) parts.push(t.leftHome(t.pets[state.leftPet]))
     if (state.pet !== 'none') parts.push(t.petInfo(t.pets[state.pet], Math.round(food * 100), Math.round(drinkLevel * 100)))
+    if (state.pet !== 'none' && leavesIn < LEAVE_MS) parts.push(t.starving(Math.max(1, Math.ceil(leavesIn / HOUR))))
     if (state.plant !== 'none') parts.push(t.plantInfo(t.plants[state.plant], t.stages[state.stage], isDry))
     info.textContent = [notice, ...parts].filter(Boolean).join(' · ')
   }
@@ -199,8 +218,17 @@
     if (document.hidden) return
     tick += 1
     draw()
-    // The levels change slowly: refresh the text about once a minute.
-    if (tick % 360 === 0) renderInfo()
+    // The levels change slowly: check on the pet and refresh the text about once a minute.
+    if (tick % 360 === 0) checkOnPet()
+  }
+
+  function checkOnPet() {
+    const after = runAway(state, Date.now())
+    if (after !== state) {
+      state = after
+      void save()
+      render()
+    } else renderInfo()
   }
 
   window.petCorner.handleLanguageChanged = render
@@ -217,6 +245,7 @@
       state = { ...EMPTY, ...((await orca.storage.get(STORAGE_KEY)) || {}) }
     } catch {}
     render()
+    checkOnPet()
     await syncCoins()
   })()
 })()

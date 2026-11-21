@@ -8,7 +8,7 @@
     <script>
       const failures = []
       const check = (ok, message) => ok || failures.push(message)
-      const { needs, feed, water, choosePet, choosePlant } = window.petCorner
+      const { needs, feed, drink, water, choosePet, choosePlant, runAway } = window.petCorner
       const HOUR = 60 * 60 * 1000
       const start = 1000 * HOUR
 
@@ -19,6 +19,14 @@
       check(needs(pet, start + 30 * HOUR).food === 0, 'levels stop at empty')
       pet = feed(pet, start + 6 * HOUR)
       check(!needs(pet, start + 6 * HOUR).isHungry, 'feeding fills the bowl')
+
+      const neglected = choosePet({}, 'dog', start)
+      // Water runs out first, at 6 hours; a day after that the dog leaves.
+      check(runAway(neglected, start + 29 * HOUR) === neglected, 'still home 23 hours after the water ran out')
+      const gone = runAway(neglected, start + 31 * HOUR)
+      check(gone.pet === 'none' && gone.leftPet === 'dog', 'a day after a bowl ran empty, the pet leaves home')
+      check(runAway(drink(neglected, start + 29 * HOUR), start + 31 * HOUR).pet === 'dog', 'water in time keeps it home')
+      check(choosePet(gone, 'cat', start).leftPet === null, 'adopting another clears the message')
 
       let plant = choosePlant({}, 'rose', start)
       plant = water(plant, start + HOUR)
