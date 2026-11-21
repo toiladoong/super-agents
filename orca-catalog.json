@@ -1,0 +1,47 @@
+{
+  "catalogVersion": 2,
+  "name": "super-agents",
+  "owner": "toiladoong",
+  "plugins": [
+    {
+      "id": "toiladoong.super-agents-office",
+      "source": {
+        "kind": "git",
+        "url": "https://github.com/toiladoong/super-agents.git",
+        "ref": "main"
+      },
+      "description": "Văn phòng pixel cho các agent đang chạy trong Orca (kèm thú nuôi, cây trồng, xu), và trình sửa trực quan team.json của super-agents. / A pixel office for the agents running in Orca (with a pet, a plant and coins), and a visual team.json editor for super-agents.",
+      "categories": [
+        "agents"
+      ],
+      "releases": [
+        {
+          "version": "0.12.0",
+          "commit": "f3859924f126cc5c4145db561874ef3d67a27c0a",
+          "contentHash": "8e7c694103cb58185b00299cb461d7771dfd0d6c3f154a82fd493130358a6344",
+          "execution": "trusted-worker",
+          "minimumOrca": "1.4.248",
+          "name": "Agent Office",
+          "contributes": [
+            {
+              "kind": "panels",
+              "name": "Agent Office"
+            },
+            {
+              "kind": "customEditors",
+              "name": "Team",
+              "detail": "team.json, team.default.json"
+            }
+          ],
+          "capabilities": [
+            "agent:read",
+            "workspace:read",
+            "workspace:write",
+            "settings:own",
+            "storage:own"
+          ]
+        }
+      ]
+    }
+  ]
+}
