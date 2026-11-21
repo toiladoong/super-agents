@@ -22,7 +22,7 @@
   const i18n = window.officeI18n
 
   let state = { ...EMPTY }
-  let coins = null // unknown until the worker answers
+  let wallet = null // { coins, isCheckedIn, streak, nextCheckIn }, unknown until the worker answers
   let notice = ''
   let happyUntil = 0
   let tick = 0
@@ -48,7 +48,7 @@
       try {
         answer = await orca.plugin.request('wallet.spend', { cost })
       } catch {}
-      if (answer) coins = answer.coins
+      if (answer) wallet = answer
       if (!answer || !answer.ok) {
         notice = i18n.t.corner.notEnough(cost)
         render()
@@ -63,8 +63,16 @@
   async function syncCoins() {
     try {
       const answer = await orca.plugin.request('wallet.sync')
-      coins = answer.coins
+      wallet = answer
       if (answer.earned) notice = i18n.t.corner.earned(answer.earned)
+      render()
+    } catch {}
+  }
+
+  async function handleCheckIn() {
+    try {
+      wallet = await orca.plugin.request('wallet.checkIn')
+      if (wallet.earned) notice = i18n.t.corner.checkedIn(wallet.earned, wallet.streak)
       render()
     } catch {}
   }
@@ -99,7 +107,12 @@
     const t = i18n.t.corner
     fillSelect(document.getElementById('pet'), t.pets, (pet) => adoptCost(state, pet), state.pet)
     fillSelect(document.getElementById('plant'), t.plants, (plant) => seedCost(state, plant), state.plant)
+    const coins = wallet ? wallet.coins : null
     document.getElementById('coins').textContent = coins === null ? '' : t.coins(coins)
+    const checkInButton = document.getElementById('check-in')
+    checkInButton.hidden = !wallet
+    checkInButton.disabled = Boolean(wallet && wallet.isCheckedIn)
+    if (wallet) checkInButton.textContent = wallet.isCheckedIn ? t.checkedInToday(wallet.streak) : t.checkIn(wallet.nextCheckIn)
     for (const action of ['feed', 'drink', 'water']) {
       const button = document.getElementById(action)
       button.textContent = `${t[action]} · ${t.price(PRICES[action])}`
@@ -186,6 +199,7 @@
   }
 
   window.petCorner.handleLanguageChanged = render
+  document.getElementById('check-in').addEventListener('click', handleCheckIn)
   document.getElementById('feed').addEventListener('click', handleFeed)
   document.getElementById('drink').addEventListener('click', handleDrink)
   document.getElementById('water').addEventListener('click', handleWater)

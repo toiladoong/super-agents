@@ -4,12 +4,19 @@
 export const TASK_COINS = 10
 export const RUN_COINS = 30 // a ticket done: every task of its Run completed
 export const START_COINS = 30
+// Daily check-in: 10 coins, 5 more for each day in a row, at most 50.
+export const CHECK_IN_COINS = 10
+export const STREAK_STEP = 5
+export const CHECK_IN_MAX = 50
 
 export type Wallet = {
   coins: number
   // Tasks already paid, per Run not finished yet; a finished Run moves to `paidRuns` and its tasks are dropped.
   paidTasks: Record<string, string[]>
   paidRuns: string[]
+  // The last check-in day ('YYYY-MM-DD', this machine's time zone) and how many days in a row it closed.
+  checkedInOn?: string
+  streak?: number
 }
 export type RunTasks = { id: string; tasks: { id: string; status: string }[] }
 
@@ -36,7 +43,30 @@ export function reward(wallet: Wallet, runs: RunTasks[]): { wallet: Wallet; earn
       paidTasks[run.id] = [...paid]
     }
   }
-  return { wallet: { coins: wallet.coins + earned, paidTasks, paidRuns }, earned }
+  return { wallet: { ...wallet, coins: wallet.coins + earned, paidTasks, paidRuns }, earned }
+}
+
+// The coins a check-in on day `streak` of a run pays.
+export const checkInCoins = (streak: number) => Math.min(CHECK_IN_MAX, CHECK_IN_COINS + STREAK_STEP * (streak - 1))
+
+// The day before `day` ('YYYY-MM-DD').
+export function previousDay(day: string): string {
+  const [year, month, date] = day.split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, date - 1)).toISOString().slice(0, 10)
+}
+
+// The wallet after checking in on `today`, or null when already done today. Yesterday's check-in carries the streak
+// on; any gap starts it again at day 1.
+export function checkIn(wallet: Wallet, today: string): { wallet: Wallet; earned: number } | null {
+  if (wallet.checkedInOn === today) return null
+  const streak = wallet.checkedInOn === previousDay(today) ? (wallet.streak ?? 0) + 1 : 1
+  const earned = checkInCoins(streak)
+  return { wallet: { ...wallet, coins: wallet.coins + earned, checkedInOn: today, streak }, earned }
+}
+
+// The streak still alive on `today`: checked in today or yesterday, else 0.
+export function liveStreak(wallet: Wallet, today: string): number {
+  return wallet.checkedInOn === today || wallet.checkedInOn === previousDay(today) ? (wallet.streak ?? 0) : 0
 }
 
 // The wallet after paying `cost`, or null when there are not enough coins.

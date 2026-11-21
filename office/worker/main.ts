@@ -8,7 +8,7 @@ import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import type { OrcaWorkerApi } from 'orca/worker'
 
-import { NEW_WALLET, reward, spend } from './wallet'
+import { NEW_WALLET, checkIn, checkInCoins, liveStreak, reward, spend } from './wallet'
 import type { RunTasks, Wallet } from './wallet'
 
 const TEAM_PATH = '.agents/team.json'
@@ -146,6 +146,20 @@ async function unpaidRuns(paidRuns: string[]): Promise<RunTasks[]> {
 
 const WALLET_KEY = 'wallet'
 
+// Today on this machine's clock, as 'YYYY-MM-DD'.
+function localDay(date = new Date()): string {
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+// What the panel shows of a wallet: coins, and the check-in button (done today?, streak, what the next one pays).
+function walletView(wallet: Wallet) {
+  const today = localDay()
+  const streak = liveStreak(wallet, today)
+  const isCheckedIn = wallet.checkedInOn === today
+  return { coins: wallet.coins, isCheckedIn, streak, nextCheckIn: isCheckedIn ? 0 : checkInCoins(streak + 1) }
+}
+
 export default function activate(orca: OrcaWorkerApi): void {
   // One wallet change at a time, so a sync and a purchase never overwrite each other.
   let walletQueue: Promise<unknown> = Promise.resolve()
@@ -164,14 +178,22 @@ export default function activate(orca: OrcaWorkerApi): void {
   orca.panels.handle('wallet.sync', () =>
     withWallet(async (wallet) => {
       const paid = reward(wallet, await unpaidRuns(wallet.paidRuns))
-      return { wallet: paid.earned ? paid.wallet : wallet, answer: { coins: paid.wallet.coins, earned: paid.earned } }
+      return { wallet: paid.earned ? paid.wallet : wallet, answer: { ...walletView(paid.wallet), earned: paid.earned } }
     })
   )
   orca.panels.handle('wallet.spend', (input) =>
     withWallet(async (wallet) => {
       const cost = Number((input as { cost?: unknown } | undefined)?.cost)
       const after = spend(wallet, cost)
-      return after ? { wallet: after, answer: { ok: true, coins: after.coins } } : { wallet, answer: { ok: false, coins: wallet.coins } }
+      return after ? { wallet: after, answer: { ok: true, ...walletView(after) } } : { wallet, answer: { ok: false, ...walletView(wallet) } }
+    })
+  )
+  orca.panels.handle('wallet.checkIn', () =>
+    withWallet(async (wallet) => {
+      const done = checkIn(wallet, localDay())
+      return done
+        ? { wallet: done.wallet, answer: { ...walletView(done.wallet), earned: done.earned } }
+        : { wallet, answer: { ...walletView(wallet), earned: 0 } }
     })
   )
   orca.panels.handle('agents.snapshot', async () => ({ agents: await agentsSnapshot() }))

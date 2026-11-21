@@ -89,7 +89,7 @@ chữ cái trên ngực áo (O orchestrator, RS researcher, C coder, RV reviewer
 **Góc thư giãn** dưới văn phòng: nuôi chó / mèo / chuột / chim (cho ăn, cho uống; đói hay khát thì nó ra ngồi chờ bên
 bát; bát cạn quá 1 ngày thì nó bỏ nhà ra đi) và trồng cây (xương rồng, hướng dương, trầu bà, hoa hồng: tưới để lớn dần tới khi ra hoa, quá 1 ngày không tưới thì
 héo, quá 3 ngày thì chết). Chọn, đổi thú nuôi / cây miễn phí (bát và đất giữ nguyên khi đổi); chỉ khi con trước bỏ đi / cây trước chết thì con / cây mới phải trả xu (chuột 20, chim 30, mèo 40, chó 50; xương rồng 10, trầu bà 15, hướng dương 20, hoa hồng 30). Cho ăn 5, cho uống 2, tưới 1 xu; mỗi việc worker trong Orca xong +10 xu, cả ticket xong (mọi việc của Run) thưởng thêm 30 xu;
-bắt đầu với 30 xu. Thú nuôi, cây và ví xu lưu trong bộ nhớ riêng của plugin (quyền `storage:own`).
+bắt đầu với 30 xu. Mỗi ngày bấm 📅 Điểm danh được 10 xu, mỗi ngày liên tiếp thêm 5 xu (tối đa 50 xu/ngày), bỏ một ngày thì chuỗi tính lại. Thú nuôi, cây và ví xu lưu trong bộ nhớ riêng của plugin (quyền `storage:own`).
 
 ```
 orca plugin dev load <thư mục plugin>/office            # in ra fingerprint

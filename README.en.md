@@ -88,7 +88,7 @@ letter on the shirt chest (O orchestrator, RS researcher, C coder, RV reviewer, 
 **Pet corner** under the office: keep a dog / cat / mouse / bird (feed it, fill its water; hungry or thirsty, it waits by
 the bowl; a bowl empty for a day and it runs away) and a plant (cactus, sunflower, pothos, rose: water it to grow it up to flowering; a day without water wilts
 it, three days kill it). Choosing or switching a pet / plant is free (bowls and soil stay as they are); only after a pet ran away / a plant died does the next one cost coins (mouse 20, bird 30, cat 40, dog 50; cactus 10, pothos 15, sunflower 20, rose 30). Feeding 5, water bowl 2, watering 1 coin; each worker task finished in Orca +10, a whole ticket done (every task of its Run) +30 more;
-you start with 30. The pet, plant and wallet live in the plugin's own storage (`storage:own`).
+you start with 30. 📅 Check in once a day for 10 coins, 5 more for each day in a row (up to 50 a day); a missed day starts the streak over. The pet, plant and wallet live in the plugin's own storage (`storage:own`).
 
 ```
 orca plugin dev load <plugin folder>/office            # prints a fingerprint
