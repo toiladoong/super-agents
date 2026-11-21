@@ -1,0 +1,21 @@
+{
+  "name": "super-agents",
+  "interface": {
+    "displayName": "Super Agents"
+  },
+  "plugins": [
+    {
+      "name": "super-agents",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/toiladoong/super-agents.git",
+        "ref": "main"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

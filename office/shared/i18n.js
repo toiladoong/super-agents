@@ -118,6 +118,7 @@
         <li><code>/super-agents:review here [ticket]</code> review gọn trong tab đang mở, không mở tab / worker mới; hỏi bạn chọn lỗi trước khi sửa</li>
         <li>Thêm <code>env &lt;tên|url&gt;</code> để tester test trên môi trường thật (tên lấy từ <code>environments</code> trong <code>team.json</code>)</li>
         <li><code>/super-agents:dev status</code> xem worker nào đang làm / rảnh</li>
+        <li><code>/super-agents:setup</code> cài nốt phần máy này còn thiếu: panel này, skill orchestration, bản cho Codex</li>
         <li>Ngôn ngữ của panel theo <code>"language"</code> trong <code>team.json</code> của workspace đang mở (chọn trong <b>⚙ Team</b>); workspace chưa đặt thì theo Orca Settings → plugin Agent Office → <b>Ngôn ngữ</b>.</li>
       </ul>`,
     en: `
@@ -141,6 +142,7 @@
         <li><code>/super-agents:review here [ticket]</code> reviews right in the open tab, no new tab / worker; asks you which findings to fix first</li>
         <li>Add <code>env &lt;name|url&gt;</code> so the tester tests a real environment (names from <code>environments</code> in <code>team.json</code>)</li>
         <li><code>/super-agents:dev status</code> shows which workers are busy / free</li>
+        <li><code>/super-agents:setup</code> installs what this machine still lacks: this panel, the orchestration skill, the Codex plugin</li>
         <li>The panel follows <code>"language"</code> in the focused workspace's <code>team.json</code> (pick it in <b>⚙ Team</b>); a workspace without one follows Orca Settings → Agent Office plugin → <b>Language</b>.</li>
       </ul>`
   }

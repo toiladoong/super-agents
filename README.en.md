@@ -6,35 +6,40 @@ A team of agents running in Orca: an **orchestrator** coordinates a **researcher
 for one ticket. Which AI / model each role runs on is configured per repo (Claude by default).
 
 ## Install
-Repo: https://github.com/toiladoong/super-agents
+Repo: https://github.com/toiladoong/super-agents. Needs Orca running and Claude Code.
 
-Claude Code (once per machine):
+**Quick install** (once per machine), in Claude Code:
 
 ```
 /plugin marketplace add toiladoong/super-agents
 /plugin install super-agents@super-agents
+/super-agents:setup
 ```
 
-To update to a new version: `/plugin marketplace update super-agents` then `/plugin update super-agents@super-agents` (or
-`/reload-plugins` in an open session).
+`/super-agents:setup` checks and asks before installing what is missing: the **Agent Office** panel in Orca (it opens the
+install link; Orca shows its own confirm: **Add catalog** → **Review & Install** → approve the access), Orca's
+`orchestration` skill, and the Codex plugin when the machine has Codex.
 
-In Orca, the Claude profiles share `~/.claude/plugins` (junction): install **once from `~/.claude`**, don't install from
-an Orca session (if the path is recorded under the Orca profile, the Claude desktop app skips the plugin):
+Update: `/plugin marketplace update super-agents` then `/plugin update super-agents@super-agents` (or `/reload-plugins`
+in an open session). The Orca panel: open the install link again.
 
-```
-CLAUDE_CONFIG_DIR="$HOME/.claude" claude plugin marketplace add toiladoong/super-agents
-CLAUDE_CONFIG_DIR="$HOME/.claude" claude plugin install super-agents@super-agents
-```
+### Manual install / notes
+- **Claude in Orca:** Orca's Claude profiles share `~/.claude/plugins` (junction). Install **from `~/.claude`**, not
+  from an Orca session (if the path is recorded under the Orca profile, the Claude desktop app skips the plugin):
 
-Other AIs (Codex, opencode...) need the code on the machine: `git clone https://github.com/toiladoong/super-agents.git`.
-- Skill for other AIs: Orca's shared skill folder `~/.agents/skills/`. Windows:
-  `New-Item -ItemType Junction -Path "$env:USERPROFILE\.agents\skills\dev" -Target "<clone folder>\skills\dev"`
-  (macOS / Linux: `ln -s`). `orca skills installed` must show `dev` under "Agent skills home".
-- Agent Office panel in Orca (once per machine): open the install link and confirm in Orca (**Add catalog** →
-  **Review & Install** → approve its access): `start "orca://plugins/toiladoong.super-agents-office?catalog=https://github.com/toiladoong/super-agents.git"` (Windows; macOS `open`, Linux `xdg-open`), or run
-  `orca plugin install toiladoong/super-agents` (prints a fingerprint, run again with `--approve <fingerprint>`).
-
-Requires: Orca running, the `orca` CLI, Orca's `orchestration` skill (`orca skills install --skill orchestration`).
+  ```
+  # macOS / Linux / Git Bash
+  CLAUDE_CONFIG_DIR="$HOME/.claude" claude plugin marketplace add toiladoong/super-agents
+  CLAUDE_CONFIG_DIR="$HOME/.claude" claude plugin install super-agents@super-agents
+  # Windows PowerShell
+  $env:CLAUDE_CONFIG_DIR="$HOME\.claude"; claude plugin marketplace add toiladoong/super-agents; claude plugin install super-agents@super-agents
+  ```
+- **Agent Office panel:** open `orca://plugins/toiladoong.super-agents-office?catalog=https://github.com/toiladoong/super-agents.git` (PowerShell: `Start-Process "<link>"`, cmd: `start "" "<link>"`, macOS: `open`, Linux: `xdg-open`), or
+  `orca plugin install toiladoong/super-agents` (prints a fingerprint the first time, run again with
+  `--approve <fingerprint>`).
+- **Codex:** `codex plugin marketplace add toiladoong/super-agents` then `codex plugin add super-agents@super-agents`.
+  If `~/.agents/skills/dev` is a junction to an old clone, remove it so Codex does not load the skill twice.
+- **Orca's orchestration skill:** `orca skills install --skill orchestration`.
 
 ## Language
 Replies, plans and reports follow `"language": "vi" | "en"` in the repo's `.agents/team.json` (default `vi`; also
@@ -54,6 +59,7 @@ in both languages (e.g. "sửa 1, 3" / "fix 1, 3", "không sửa" / "skip").
 | `/super-agents:review off` | Turn the lock off manually (or say "xong review" / "done review"). Usually not needed: the lock turns off by itself when the review is done (the `✅ Review xong` / `✅ Review done` line), when you answer "không sửa" / "skip" or "bỏ qua" / "ignore", or when you type another `/…` command |
 | `env <name\|url>` (added to `dev` / `review`) | The tester tests a real environment (e.g. a staging / production web domain) instead of a local build. Names come from `environments` in `.agents/team.json`: `{ "staging": "https://…" }`. The tester first checks the environment runs the build under test; test accounts only, no payments / deleting / changing real data, production is look-only |
 | `/super-agents:dev status` | Table of workers busy / idle / waiting |
+| `/super-agents:setup` | Installs what this machine still lacks (the Agent Office panel in Orca, the orchestration skill, the Codex plugin), asking before each step |
 
 During a `here` review, the suggestion after each turn (Orca chat box and Claude Code prompt box) is the next answer: after a review turn it is **"sửa hết lỗi chặn"** / **"fix all blocking"**, after a fix turn it is
 **"xong review"** / **"done review"**; press **Tab** (or →) to take it, edit if needed (e.g. "sửa 1, 3" / "fix 1, 3") then send.
@@ -107,9 +113,8 @@ Other keys in the file (such as `_comment`) are kept as-is.
 
 Orca installs the newest `vX.Y.Z` tag (else the default branch) and stays on it; run the install again to update.
 While changing the plugin, load the clone itself: `orca plugin dev load <clone folder>` (`orca-plugin.json` at the repo
-root, code in `office/`). Releasing the panel: bump `version` in `orca-plugin.json` (kept equal to
-`.claude-plugin/plugin.json`), commit, `git tag v<version>`, `git push --tags`; then put the output of
-`orca plugin release-entry .` first in `releases` of `orca-catalog.json` (the catalog the install link reads), commit, push.
+root, code in `office/`). Releasing (the Claude, Codex and Orca plugins share one version): `node scripts/release.mjs <x.y.z>` sets the version
+of all three, commits, tags, adds that release to `orca-catalog.json` (the catalog the install link reads) and pushes.
 
 Logic checks: open `office/panel/agents.check.html`, `office/panel/pets.check.html` and
 `office/team-editor/editor.check.html` in a browser; the page title must be `PASS`; worker tests:

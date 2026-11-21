@@ -6,42 +6,39 @@ Nhóm agent chạy trong Orca: **orchestrator** điều phối **researcher**, *
 cho một ticket. Mỗi vai chạy bằng AI / model nào là cấu hình theo repo (mặc định Claude).
 
 ## Cài
-Repo: https://github.com/toiladoong/super-agents
+Repo: https://github.com/toiladoong/super-agents. Cần Orca đang chạy và Claude Code.
 
-Claude Code (mỗi máy một lần):
+**Cài nhanh** (mỗi máy một lần), trong Claude Code:
 
 ```
 /plugin marketplace add toiladoong/super-agents
 /plugin install super-agents@super-agents
+/super-agents:setup
 ```
 
-Cập nhật bản mới: `/plugin marketplace update super-agents` rồi `/plugin update super-agents@super-agents` (hoặc
-`/reload-plugins` trong phiên đang mở).
+`/super-agents:setup` tự kiểm tra và hỏi trước khi cài phần còn thiếu: panel **Agent Office** trong Orca (mở link cài,
+Orca hiện hộp xác nhận **Add catalog** → **Review & Install** → duyệt quyền), skill `orchestration` của Orca, và bản
+cho Codex nếu máy có Codex.
 
-Trong Orca, các profile Claude dùng chung `~/.claude/plugins` (junction): cài **một lần từ `~/.claude`**, đừng cài từ
-phiên Orca (đường dẫn ghi theo profile Orca thì app desktop Claude bỏ qua plugin):
+Cập nhật: `/plugin marketplace update super-agents` rồi `/plugin update super-agents@super-agents` (hoặc
+`/reload-plugins` trong phiên đang mở). Panel Orca: mở lại link cài.
 
-```
-CLAUDE_CONFIG_DIR="$HOME/.claude" claude plugin marketplace add toiladoong/super-agents
-CLAUDE_CONFIG_DIR="$HOME/.claude" claude plugin install super-agents@super-agents
-```
+### Cài tay / ghi chú
+- **Claude trong Orca:** các profile Claude của Orca dùng chung `~/.claude/plugins` (junction). Cài **từ `~/.claude`**,
+  đừng cài từ phiên Orca (đường dẫn ghi theo profile Orca thì app desktop Claude bỏ qua plugin):
 
-Panel Agent Office trong Orca (mỗi máy một lần). Mở link cài, Orca hiện hộp xác nhận: **Add catalog** → **Review &
-Install** → duyệt quyền:
-
-```
-start "orca://plugins/toiladoong.super-agents-office?catalog=https://github.com/toiladoong/super-agents.git"    # Windows (macOS: open, Linux: xdg-open)
-```
-
-Hoặc cài bằng lệnh: `orca plugin install toiladoong/super-agents` (lần đầu in fingerprint, chạy lại với
-`--approve <fingerprint>`).
-
-AI khác (Codex, opencode...) cần mã ở máy: `git clone https://github.com/toiladoong/super-agents.git`.
-- Skill cho AI khác: thư mục skill dùng chung của Orca `~/.agents/skills/`. Windows:
-  `New-Item -ItemType Junction -Path "$env:USERPROFILE\.agents\skills\dev" -Target "<thư mục clone>\skills\dev"`
-  (macOS / Linux: `ln -s`). `orca skills installed` phải thấy `dev` ở "Agent skills home".
-
-Cần: Orca đang chạy, `orca` CLI, skill `orchestration` của Orca (`orca skills install --skill orchestration`).
+  ```
+  # macOS / Linux / Git Bash
+  CLAUDE_CONFIG_DIR="$HOME/.claude" claude plugin marketplace add toiladoong/super-agents
+  CLAUDE_CONFIG_DIR="$HOME/.claude" claude plugin install super-agents@super-agents
+  # Windows PowerShell
+  $env:CLAUDE_CONFIG_DIR="$HOME\.claude"; claude plugin marketplace add toiladoong/super-agents; claude plugin install super-agents@super-agents
+  ```
+- **Panel Agent Office:** mở `orca://plugins/toiladoong.super-agents-office?catalog=https://github.com/toiladoong/super-agents.git` (PowerShell: `Start-Process "<link>"`, cmd: `start "" "<link>"`, macOS: `open`, Linux: `xdg-open`), hoặc
+  `orca plugin install toiladoong/super-agents` (lần đầu in fingerprint, chạy lại với `--approve <fingerprint>`).
+- **Codex:** `codex plugin marketplace add toiladoong/super-agents` rồi `codex plugin add super-agents@super-agents`.
+  Máy đã tạo junction `~/.agents/skills/dev` tới bản clone cũ thì xoá junction đó để Codex không nạp skill hai lần.
+- **Skill orchestration của Orca:** `orca skills install --skill orchestration`.
 
 ## Ngôn ngữ
 Mặc định **tiếng Việt**. Đặt `"language": "en"` trong `.agents/team.json` của repo (hoặc chọn trong editor Team) để AI
@@ -62,6 +59,7 @@ tiếng Anh đều được hiểu ("sửa 1, 3" / "fix 1, 3", "không sửa" / 
 | `/super-agents:review off` | Tắt khoá bằng tay (hoặc nói "xong review"). Thường không cần: khoá tự tắt khi review xong (dòng `✅ Review xong`), khi bạn trả lời "không sửa" / "bỏ qua", hoặc khi bạn gõ lệnh `/…` khác |
 | `env <tên\|url>` (thêm vào `dev` / `review`) | Tester test trên môi trường thật (vd. domain web staging / production) thay vì bản chạy local. Tên lấy từ `environments` trong `.agents/team.json`: `{ "staging": "https://…" }`. Tester kiểm tra môi trường đã có bản cần test chưa; chỉ dùng tài khoản test, không thanh toán / xoá / sửa dữ liệu thật, production chỉ xem |
 | `/super-agents:dev status` | Bảng worker đang làm / rảnh / chờ |
+| `/super-agents:setup` | Cài nốt phần máy này còn thiếu (panel Agent Office trong Orca, skill orchestration, bản cho Codex), hỏi trước từng bước |
 
 Trong lúc review `here`, gợi ý sau mỗi lượt (khung chat Orca và khung prompt Claude Code) là câu trả lời tiếp theo: xong lượt review là **"sửa hết lỗi chặn"**, xong lượt sửa là
 **"xong review"**; bấm **Tab** (hoặc →) để lấy, sửa lại nếu cần (vd. "sửa 1, 3") rồi gửi.
@@ -110,9 +108,8 @@ Orca cài bản có tag `vX.Y.Z` mới nhất (không có tag thì nhánh chính
 mới. Đang sửa plugin thì nạp thẳng thư mục clone: `orca plugin dev load <thư mục clone>` (file `orca-plugin.json` ở gốc
 repo, mã ở `office/`).
 
-Phát hành panel: tăng `version` trong `orca-plugin.json` (giữ bằng `version` của `.claude-plugin/plugin.json`), commit,
-`git tag v<version>`, `git push --tags`; rồi `orca plugin release-entry .` và chép kết quả lên đầu `releases` trong
-`orca-catalog.json` (danh mục mà link cài đọc), commit, push.
+Phát hành bản mới (plugin Claude, Codex và panel Orca cùng một số): `node scripts/release.mjs <x.y.z>` — đặt version cho
+cả ba, commit, gắn tag, thêm bản đó vào `orca-catalog.json` (danh mục mà link cài đọc) rồi push.
 
 **Sửa team trực quan:** bấm nút **⚙ Team** trên panel Agent Office (mở `.agents/team.json` của workspace đang mở; repo chưa có thì tạo từ `team.default.json` của plugin, chưa commit), hoặc mở `.agents/team.json` (hoặc `team.default.json`) trong Orca, chọn **Team** ở nút chuyển
 bên cạnh Source. Mỗi vai một dòng (hình nhân viên xem trước, AI, model, file vai), các luật `notes` sửa / thêm / xoá
