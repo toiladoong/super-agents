@@ -99,7 +99,7 @@ bắt đầu với 30 xu. Mỗi ngày bấm 📅 Điểm danh được 10 xu, m�
 ```
 orca plugin install toiladoong/super-agents                          # in ra fingerprint cần duyệt
 orca plugin install toiladoong/super-agents --approve <fingerprint>
-orca plugin open local.super-agents-office
+orca plugin open toiladoong.super-agents-office    # bản nạp dev: local.super-agents-office
 ```
 
 Orca cài bản có tag `vX.Y.Z` mới nhất (không có tag thì nhánh chính) và giữ đúng bản đó; chạy lại lệnh cài để lên bản
