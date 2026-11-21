@@ -94,7 +94,7 @@ you start with 30. 📅 Check in once a day for 10 coins, 5 more for each day in
 ```
 orca plugin install toiladoong/super-agents                          # prints the fingerprint to approve
 orca plugin install toiladoong/super-agents --approve <fingerprint>
-orca plugin open toiladoong.super-agents-office    # bản nạp dev: local.super-agents-office
+orca plugin open toiladoong.super-agents-office    # a dev load: local.super-agents-office
 ```
 
 **Visual team editing:** click the **⚙ Team** button on the Agent Office panel (opens `.agents/team.json` of the open workspace; a repo without one gets it created from the plugin's `team.default.json`, not committed), or open `.agents/team.json` (or `team.default.json`) in Orca, choose **Team** on the toggle
