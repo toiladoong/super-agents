@@ -29,6 +29,7 @@ const MESSAGES = {
 
 type PsAgent = {
   paneKey: string
+  parentPaneKey?: string | null
   state: string
   agentType?: string | null
   displayName?: string | null
@@ -75,6 +76,7 @@ async function agentsSnapshot() {
   return worktrees.flatMap((worktree) =>
     (worktree.agents ?? []).map((agent) => ({
       key: agent.paneKey,
+      parentKey: agent.parentPaneKey ?? null,
       title: agent.displayName || agent.taskTitle || agent.conversationName || '',
       agent: agent.agentType || 'agent',
       state: agent.state,

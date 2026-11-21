@@ -39,14 +39,16 @@ Read `.agents/team.json` at the repo root; if missing, use `SKILL_DIR/team.defau
 - `language`: `vi` (default) or `en` — the language every reply to the user, every spec / plan file and every message
   to workers uses. Instructions here are in English; replies follow `language`.
 
-Command for each worker (add `--model` only when there is a `model`), then name the tab after the role so the Agent
-Office panel and `/dev status` recognize it (`<handle>` comes from the `worker-start` result; the orchestrator names its
-own tab `orchestrator · <ticket>`):
+Command for each worker (add `--model` only when there is a `model`). The task title **must** start with the role, in
+exactly this form, so the Agent Office panel and `/dev status` recognize it (Orca shows the task title as the tab name;
+`orca terminal rename` does not reach a chat tab):
 
 ```
-orca orchestration worker-start --agent <agent> [--model <model>] --worktree <...> --spec "<spec>"
-orca terminal rename --terminal <handle> --title "<role> · <work part>"
+orca orchestration worker-start --agent <agent> [--model <model>] --worktree <...>   --task-title "<role> · <work part>" --spec "<spec>"
 ```
+
+e.g. `--task-title "reviewer · SG-30189 UI"`, `"skeptic · SG-30189"`, `"coder · SG-30189 api"`. The orchestrator's own
+tab needs no name: the panel knows it as the tab its workers report to.
 
 ## Ticket
 The ticket argument is a key (e.g. `SG-30200`), a link (Jira, Figma…) or a text description.
@@ -54,7 +56,7 @@ The ticket argument is a key (e.g. `SG-30200`), a link (Jira, Figma…) or a tex
   skill / connector…). Cannot read it (no tool, not logged in, error) → **stop, tell the user** and ask for a
   description or access; do not guess the requirements from the ticket key. A text description is used directly as the
   requirements.
-- **Name from the ticket** (file `.agents/plans/<name>.md`, worktree `<name>-<part>`, tab `orchestrator · <name>`): for
+- **Name from the ticket** (file `.agents/plans/<name>.md`, worktree `<name>-<part>`, worker task titles `<role> · <name> <part>`): for
   a ticket key use the key (`SG-30200`); for a link / description shorten it: strip diacritics (e.g. Vietnamese),
   lowercase, keep only `a-z 0-9` and `-`, other characters become `-`, collapse consecutive `-`, at most 40 characters
   (e.g. "Add Sports tab to Header" → `add-sports-tab-to-header`; "Thêm tab Thể thao" → `them-tab-the-thao`).

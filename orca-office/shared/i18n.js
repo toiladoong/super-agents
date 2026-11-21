@@ -65,7 +65,7 @@
       </ul>
       <ul>
         <li>Hiện agent của mọi workspace trong Orca, tên bàn là tên phiên (như ở sidebar Orca); cập nhật mỗi 3 giây.</li>
-        <li>Vai đọc từ tên tab <code>&lt;vai&gt; · &lt;phần việc&gt;</code> (lệnh <code>/super-agents:dev</code> tự đặt).</li>
+        <li>Vai đọc từ tên tab <code>&lt;vai&gt; · &lt;phần việc&gt;</code> (lệnh <code>/super-agents:dev</code> tự đặt cho worker); orchestrator là tab có worker báo về.</li>
         <li><b>⚙ Team</b>: mở <code>.agents/team.json</code> để chọn AI / model cho từng vai, ngôn ngữ trả lời và luật riêng của repo.</li>
         <li><code>/super-agents:dev &lt;ticket&gt;</code> chạy cả nhóm: (research) → kế hoạch → <b>bạn duyệt</b> → code → review → test → nghiệm thu → <b>bạn duyệt</b></li>
         <li><code>/super-agents:dev plan &lt;ticket&gt;</code> chỉ lập kế hoạch rồi dừng, lưu <code>.agents/plans/&lt;ticket&gt;.md</code>; chạy <code>/super-agents:dev &lt;ticket&gt;</code> sau để làm theo (thêm <code>here</code> để lập ngay trong tab)</li>
@@ -86,7 +86,7 @@
       </ul>
       <ul>
         <li>Shows the agents of every Orca workspace; a desk is named after its session (as in Orca's sidebar); updated every 3 seconds.</li>
-        <li>The role is read from the tab name <code>&lt;role&gt; · &lt;part&gt;</code> (set by <code>/super-agents:dev</code>).</li>
+        <li>The role is read from the tab name <code>&lt;role&gt; · &lt;part&gt;</code> (set by <code>/super-agents:dev</code> for workers); the orchestrator is the tab its workers report to.</li>
         <li><b>⚙ Team</b>: opens <code>.agents/team.json</code> to pick the AI / model of each role, the reply language and the repo's rules.</li>
         <li><code>/super-agents:dev &lt;ticket&gt;</code> runs the whole team: (research) → plan → <b>you approve</b> → code → review → test → acceptance → <b>you approve</b></li>
         <li><code>/super-agents:dev plan &lt;ticket&gt;</code> only plans and stops, saving <code>.agents/plans/&lt;ticket&gt;.md</code>; run <code>/super-agents:dev &lt;ticket&gt;</code> later to follow it (add <code>here</code> to plan right in the tab)</li>

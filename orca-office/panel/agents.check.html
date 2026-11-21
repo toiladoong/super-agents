@@ -10,7 +10,7 @@
       const now = Date.now()
       const snapshots = [
         [
-          { key: 'b', title: 'reviewer · sửa lỗi coder A', agent: 'codex', state: 'working', stateStartedAt: now, tool: 'Read', workspace: 'wt' },
+          { key: 'b', parentKey: 'a', title: 'reviewer · sửa lỗi coder A', agent: 'codex', state: 'working', stateStartedAt: now, tool: 'Read', workspace: 'wt' },
           { key: 'a', title: 'Phương án tạo agent', agent: 'claude', state: 'waiting', stateStartedAt: now, tool: null, workspace: 'wt' },
           { key: 'c', title: 'old', agent: 'claude', state: 'done', stateStartedAt: now - 11 * 60 * 1000, tool: null, workspace: 'wt' }
         ],
@@ -31,6 +31,7 @@
         check(first.map((agent) => agent.key).join() === 'a,b', 'desks are sorted, and a desk done for over 10 minutes is cleared')
         check(first[0].title === 'Phương án tạo agent' && first[0].agent === 'claude', 'the session name and AI come from the worker')
         check(first[1].role === 'reviewer', 'role comes from the leading word only')
+        check(first[0].role === 'orchestrator', 'the tab workers report to is the orchestrator')
         onStatusChanged({ state: 'blocked' })
         await new Promise((resolve) => setTimeout(resolve, 20))
         const second = agentStore.list()

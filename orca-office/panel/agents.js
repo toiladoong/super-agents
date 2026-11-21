@@ -5,7 +5,7 @@
   // A finished agent stays at its desk this long, then leaves the office.
   const DONE_LINGER_MS = 10 * 60 * 1000
   const POLL_MS = 3000
-  // Tabs are named "<role> · <part>" by the dev skill; only the leading word counts.
+  // Workers are titled "<role> · <part>" by the dev skill; only the leading word counts.
   const ROLE_PATTERN = /^(orchestrator|researcher|coder|reviewer|skeptic|tester)\b/i
 
   let agents = []
@@ -32,8 +32,13 @@
     isRefreshing = true
     try {
       const snapshot = await orca.plugin.request('agents.snapshot')
+      // The orchestrator's tab gets no title of ours (Orca names it after the chat): it is the one workers report to.
+      const parents = new Set(snapshot.agents.map((agent) => agent.parentKey).filter(Boolean))
       agents = snapshot.agents
-        .map((agent) => ({ ...agent, role: roleOf(agent.title) }))
+        .map((agent) => {
+          const role = roleOf(agent.title)
+          return { ...agent, role: role === 'agent' && parents.has(agent.key) ? 'orchestrator' : role }
+        })
         .sort((a, b) => a.key.localeCompare(b.key))
       notify()
     } finally {
