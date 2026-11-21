@@ -30,7 +30,7 @@ Other AIs (Codex, opencode...) and the Orca panel need the code on the machine: 
 - Skill for other AIs: Orca's shared skill folder `~/.agents/skills/`. Windows:
   `New-Item -ItemType Junction -Path "$env:USERPROFILE\.agents\skills\dev" -Target "<clone folder>\skills\dev"`
   (macOS / Linux: `ln -s`). `orca skills installed` must show `dev` under "Agent skills home".
-- Agent Office panel: `orca plugin dev load <clone folder>/orca-office` (see the Agent Office section below).
+- Agent Office panel: `orca plugin dev load <clone folder>/office` (see the Agent Office section below).
 
 Requires: Orca running, the `orca` CLI, Orca's `orchestration` skill (`orca skills install --skill orchestration`).
 
@@ -80,14 +80,14 @@ With the [ponytail](https://github.com/dietrichgebert/ponytail) plugin, the revi
 runs `/ponytail:ponytail-debt` at acceptance.
 
 ## Agent Office (Orca plugin, optional): office panel + visual team.json editing
-The `orca-office/` panel: a pixel office in Orca's right sidebar, each agent is an employee at a desk. Shirt color by role,
+The `office/` panel: a pixel office in Orca's right sidebar, each agent is an employee at a desk. Shirt color by role,
 letter on the shirt chest (O orchestrator, RS researcher, C coder, RV reviewer, S skeptic, T tester);
 (read from the tab name: `coder · …`), hair by AI; typing = working, raised hand + "!" = needs you, "…" + coffee cup = waiting,
 "✓" = done (leaves the desk after 10 minutes). Hover over a desk to see the name, role, status, time.
 
 ```
-orca plugin dev load <plugin folder>/orca-office            # prints a fingerprint
-orca plugin dev load <plugin folder>/orca-office --approve <fingerprint>
+orca plugin dev load <plugin folder>/office            # prints a fingerprint
+orca plugin dev load <plugin folder>/office --approve <fingerprint>
 orca plugin open local.super-agents-office
 ```
 
@@ -98,8 +98,8 @@ gpt-6.2-astra, gpt-6-astra, gpt-6.1-terra, gpt-6-luna; OpenCode: `provider/model
 For AIs without a suggestion list (Antigravity, Cursor), choose "default" or enter a name. Changing the AI clears the old model.
 Other keys in the file (such as `_comment`) are kept as-is.
 
-Logic checks: open `orca-office/panel/agents.check.html` and `orca-office/team-editor/editor.check.html` in a
-browser; the page title must be `PASS`.
+Logic checks: open `office/panel/agents.check.html` and `office/team-editor/editor.check.html` in a
+browser; the page title must be `PASS`; worker tests: `orca plugin test office`.
 
 Permissions: the sandboxed panel reads agent state (`agent:read`); a small worker (`worker/main.ts`) lets the ⚙ Team button open the file, needs
 `workspace:read` + `workspace:write` and runs as a `trusted-worker` (Orca asks for approval on load). Shows agents of every workspace, the desk name is the session name (the worker reads `orca worktree ps`, refreshed every 3 seconds).
@@ -119,4 +119,4 @@ Code is in `hooks/` (`register.tsx`, `agents.ts`, `office-svg.ts`), types in `ty
 `claude plugin validate .` and `claude plugin test .`.
 
 When you add or change a command, update both guides, each in vi + en: `hooks/help.ts` (the `/office` pane) and
-`orca-office/shared/i18n.js` (the Orca panel), plus the command tables in `README.md` / `README.en.md`.
+`office/shared/i18n.js` (the Orca panel), plus the command tables in `README.md` / `README.en.md`.

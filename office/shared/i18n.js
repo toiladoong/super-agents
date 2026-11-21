@@ -117,8 +117,16 @@
       api.guide = GUIDE[lang]
       return true
     }
+    // One check at a time: a slow workspace.list (an unreachable SSH host) must not pile requests up.
+    let isChecking = false
     const handleCheck = async () => {
-      if ((await apply()) && onChange) onChange()
+      if (isChecking) return
+      isChecking = true
+      try {
+        if ((await apply()) && onChange) onChange()
+      } finally {
+        isChecking = false
+      }
     }
     await apply()
     setInterval(handleCheck, 3000)

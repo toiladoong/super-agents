@@ -30,7 +30,7 @@ AI khác (Codex, opencode...) và panel Orca cần mã ở máy: `git clone http
 - Skill cho AI khác: thư mục skill dùng chung của Orca `~/.agents/skills/`. Windows:
   `New-Item -ItemType Junction -Path "$env:USERPROFILE\.agents\skills\dev" -Target "<thư mục clone>\skills\dev"`
   (macOS / Linux: `ln -s`). `orca skills installed` phải thấy `dev` ở "Agent skills home".
-- Panel Agent Office: `orca plugin dev load <thư mục clone>/orca-office` (xem mục Agent Office bên dưới).
+- Panel Agent Office: `orca plugin dev load <thư mục clone>/office` (xem mục Agent Office bên dưới).
 
 Cần: Orca đang chạy, `orca` CLI, skill `orchestration` của Orca (`orca skills install --skill orchestration`).
 
@@ -81,14 +81,14 @@ Có plugin [ponytail](https://github.com/dietrichgebert/ponytail) thì reviewer 
 chạy `/ponytail:ponytail-debt` lúc nghiệm thu.
 
 ## Agent Office (plugin Orca, tuỳ chọn): panel văn phòng + sửa team.json trực quan
-Panel `orca-office/`: văn phòng pixel trong sidebar phải của Orca, mỗi agent là một nhân viên ngồi bàn. Màu áo theo vai,
+Panel `office/`: văn phòng pixel trong sidebar phải của Orca, mỗi agent là một nhân viên ngồi bàn. Màu áo theo vai,
 chữ cái trên ngực áo (O orchestrator, RS researcher, C coder, RV reviewer, S skeptic, T tester);
 (đọc từ tên tab: `coder · …`), tóc theo AI; gõ phím = đang làm, giơ tay + "!" = cần bạn, "…" + cốc cà phê = đang chờ,
 "✓" = xong (rời bàn sau 10 phút). Rê chuột lên bàn để xem tên, vai, trạng thái, thời gian.
 
 ```
-orca plugin dev load <thư mục plugin>/orca-office            # in ra fingerprint
-orca plugin dev load <thư mục plugin>/orca-office --approve <fingerprint>
+orca plugin dev load <thư mục plugin>/office            # in ra fingerprint
+orca plugin dev load <thư mục plugin>/office --approve <fingerprint>
 orca plugin open local.super-agents-office
 ```
 
@@ -99,8 +99,8 @@ gpt-6.2-astra, gpt-6-astra, gpt-6.1-terra, gpt-6-luna; OpenCode: `provider/model
 AI không có trong danh sách gợi ý (Antigravity, Cursor) thì chọn "mặc định" hoặc nhập tên. Đổi AI thì model cũ tự xoá.
 Các khoá khác trong file (như `_comment`) giữ nguyên.
 
-Kiểm tra logic: mở `orca-office/panel/agents.check.html` và `orca-office/team-editor/editor.check.html` trong trình
-duyệt, tiêu đề trang phải là `PASS`.
+Kiểm tra logic: mở `office/panel/agents.check.html` và `office/team-editor/editor.check.html` trong trình
+duyệt, tiêu đề trang phải là `PASS`; test của worker: `orca plugin test office`.
 
 Quyền: panel sandbox đọc trạng thái agent (`agent:read`); worker nhỏ (`worker/main.ts`) để nút ⚙ Team mở file, cần
 `workspace:read` + `workspace:write` và chạy dạng `trusted-worker` (Orca hỏi duyệt khi nạp). Hiện agent của mọi workspace, tên bàn là tên phiên (worker đọc `orca worktree ps`, cập nhật mỗi 3 giây).
@@ -120,4 +120,4 @@ Mã ở `hooks/` (`register.tsx`, `agents.ts`, `office-svg.ts`), kiểu ở `typ
 `claude plugin validate .` và `claude plugin test .`.
 
 Thêm / đổi lệnh thì sửa cả hai bản hướng dẫn, mỗi bản đủ vi + en: `hooks/help.ts` (pane `/office`) và
-`orca-office/shared/i18n.js` (panel Orca), cùng bảng lệnh trong `README.md` / `README.en.md`.
+`office/shared/i18n.js` (panel Orca), cùng bảng lệnh trong `README.md` / `README.en.md`.

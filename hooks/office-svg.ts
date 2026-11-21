@@ -1,5 +1,5 @@
 // Draws the office as one SVG: pixels are <rect>s in logical units, animated with SMIL (no script runs in the frame).
-// Same art as the Orca panel (super-agents/orca-office/panel/sprites.js).
+// Same art as the Orca panel (super-agents/office/panel/sprites.js).
 import type { OfficeAgent, OfficeState } from '../types'
 import { TEXT } from './i18n'
 import type { Lang } from './i18n'

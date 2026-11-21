@@ -118,7 +118,7 @@ async function panelLanguage(orca: OrcaWorkerApi, workspace?: { path: string }):
 
 // A repo without team.json gets the plugin's defaults, so the Team editor has something to edit. Only on this machine:
 // a remote (SSH) workspace's path is not a local folder. 'wx' never overwrites a file made in the meantime.
-async function createTeamFile(workspace: { path: string; hostId: string | null }): Promise<boolean> {
+export async function createTeamFile(workspace: { path: string; hostId: string | null }): Promise<boolean> {
   const teamFile = join(workspace.path, TEAM_PATH)
   if ((workspace.hostId ?? 'local') !== 'local' || existsSync(teamFile)) return false
   const defaults = await readFile(DEFAULT_TEAM_URL, 'utf8').catch(() => null)
