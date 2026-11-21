@@ -5,15 +5,17 @@
   // A finished agent stays at its desk this long, then leaves the office.
   const DONE_LINGER_MS = 10 * 60 * 1000
   const POLL_MS = 3000
-  // Workers are titled "<role> · <part>" by the dev skill; only the leading word counts.
-  const ROLE_PATTERN = /^(orchestrator|researcher|coder|reviewer|skeptic|tester)\b/i
+  // Workers are titled "<role> · <part>" by the dev skill; a leading role word wins, else the first one in the title
+  // ("SG-1 coder fix …", as orchestrators sometimes name tasks their own way).
+  const LEADING_ROLE = /^(orchestrator|researcher|coder|reviewer|skeptic|tester)\b/i
+  const ANY_ROLE = /\b(orchestrator|researcher|coder|reviewer|skeptic|tester)\b/i
 
   let agents = []
   let isRefreshing = false
   const listeners = []
 
   function roleOf(title) {
-    const match = ROLE_PATTERN.exec(title || '')
+    const match = LEADING_ROLE.exec(title || '') || ANY_ROLE.exec(title || '')
     return match ? match[1].toLowerCase() : 'agent'
   }
 
