@@ -55,7 +55,8 @@ Assigning new work: work **in the worktree of an idle worker** (fixing review is
 Do not open an orchestrator tab, create no Orca workers: **the running tab is the orchestrator**, the roles run as
 **Claude Code subagents** (Agent tool) right in the tab, results come back to the tab. Claude only (ignore non-Claude
 `agent` / `model` in `team.json`; its `language` still applies; pass a Claude model via the Agent tool's `model`
-parameter if any).
+parameter if any). Each subagent's `description` starts with its role, as the `/office` pane reads it:
+`reviewer · <part>`, `skeptic · <name>`, `coder · <fix>`, `tester · <name>`.
 - **Spec:** as usual (from `git diff` / ticket), **ask the user to approve**.
 - **Review:** one reviewer subagent (`subagent_type` is the repo's reviewer agent if `notes` points to one, e.g.
   `web-reviewer`; otherwise `general-purpose`), prompt: "read `<SKILL_DIR>/roles/reviewer.md` and follow it", with the

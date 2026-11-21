@@ -10,8 +10,10 @@ export const DONE_LINGER_MS = 10 * 60 * 1000
 export const MAIN_KEY = 'main'
 
 const ROLES = 'orchestrator|researcher|coder|reviewer|skeptic|tester'
-// A description named "<role> · <part>" counts by its leading word; an agent type counts anywhere ("web-tester").
+// A description named "<role> · <part>" counts by its leading word, else by a role word in it ("SG-1 coder fix");
+// then an agent type counts anywhere ("web-tester").
 const LEADING_ROLE = new RegExp(`^(${ROLES})\\b`, 'i')
+const ROLE_WORD = new RegExp(`\\b(${ROLES})\\b`, 'i')
 const ANY_ROLE = new RegExp(`(${ROLES})`, 'i')
 
 const STATE_OF: Record<AgentStatus, OfficeState> = {
@@ -25,7 +27,7 @@ const STATE_OF: Record<AgentStatus, OfficeState> = {
 }
 
 export function roleOf(description: string, type = ''): string {
-  const match = LEADING_ROLE.exec(description) ?? ANY_ROLE.exec(type)
+  const match = LEADING_ROLE.exec(description) ?? ROLE_WORD.exec(description) ?? ANY_ROLE.exec(type)
   return match?.[1]?.toLowerCase() ?? 'agent'
 }
 

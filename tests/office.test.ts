@@ -7,7 +7,8 @@ const NOW = 1_800_000_000_000
 
 test('role: leading word of the description, or anywhere in the agent type', async () => {
   expect(roleOf('reviewer · sửa lỗi coder A')).toBe('reviewer')
-  expect(roleOf('Review the coder diff')).toBe('agent')
+  expect(roleOf('SG-30189 coder fix 9 blocking')).toBe('coder')
+  expect(roleOf('SG-30189 review UI')).toBe('agent')
   expect(roleOf('Check the header', 'web-tester')).toBe('tester')
 })
 

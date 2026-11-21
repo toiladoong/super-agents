@@ -51,8 +51,10 @@ exactly this form, so the Agent Office panel and `/dev status` recognize it (Orc
 orca orchestration worker-start --agent <agent> [--model <model>] --worktree <...>   --task-title "<role> · <work part>" --spec "<spec>"
 ```
 
-e.g. `--task-title "reviewer · SG-30189 UI"`, `"skeptic · SG-30189"`, `"coder · SG-30189 api"`. The orchestrator's own
-tab needs no name: the panel knows it as the tab its workers report to.
+e.g. `--task-title "reviewer · SG-30189 UI"`, `"skeptic · SG-30189"`, `"coder · SG-30189 api"`. The orchestrator names
+its own tab first thing, before the spec: `orca chat rename --name "orchestrator · <name>"` (in a terminal tab:
+`orca terminal rename --title "orchestrator · <name>"`). Roles and their titles: `researcher`, `coder`, `reviewer`,
+`skeptic` (a reviewer worker refuting issues), `tester` — never "review" / "fix" / the ticket key in front.
 
 ## Ticket
 The ticket argument is a key (e.g. `SG-30200`), a link (Jira, Figma…) or a text description.
@@ -113,7 +115,7 @@ with the reason for each sequential point.
 - The reviewer reports only 2 levels: **blocking** (proven bugs: wrong logic, security, data loss, broken API /
   contract) and **suggestion** (style, taste, "should be more complete", redundant code that causes no bug).
   Suggestions **do not open a fix round**, they only go into the summary.
-- Blocking issues exist → assign **one skeptic worker** (role `reviewer`): try to **refute** each blocking issue —
+- Blocking issues exist → assign **one skeptic worker** (role `reviewer`, task title `skeptic · <name>`): try to **refute** each blocking issue —
   check the call sites, whether the code is reachable, whether the framework / elsewhere already handles it, whether
   it is only test code. Give each issue a label: `CONFIRMED` (real bug), `DOWNGRADED` (becomes a suggestion),
   `DISPUTED` (dropped), with evidence.
