@@ -17,7 +17,7 @@
   const STORAGE_KEY = 'petCorner'
   const SYNC_MS = 60 * 1000
   const PRICES = {
-    pets: { none: 0, mouse: 20, bird: 30, cat: 40, dog: 50 },
+    pets: { none: 0, mouse: 0, bird: 0, cat: 0, dog: 0 }, // adopting is free; food and water cost
     plants: { none: 0, cactus: 10, pothos: 15, sunflower: 20, rose: 30 },
     feed: 5,
     drink: 2,
