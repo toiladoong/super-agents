@@ -1,66 +1,17 @@
 // The pet corner under the office: a pet (dog, cat, mouse, bird) to feed and give water, and a plant to water so it
-// grows. State lives in the plugin's storage, so it survives Orca restarts; levels are worked out from timestamps.
-// Everything costs coins, earned when Orca work finishes (the worker's wallet: worker/wallet.ts).
-// Left hungry or thirsty too long, the pet leaves home.
-// Exposes window.petCorner = { needs, feed, drink, water, choosePet, choosePlant, runAway, handleLanguageChanged }.
+// grows; the rules are in pet-rules.js. State lives in the plugin's storage, so it survives Orca restarts; coins come
+// from the worker's wallet (worker/wallet.ts).
+// Exposes window.petCorner = { handleLanguageChanged }.
 ;(function () {
-  const HOUR = 60 * 60 * 1000
-  const FOOD_MS = 8 * HOUR // a full bowl lasts this long
-  const DRINK_MS = 6 * HOUR
-  const DRY_MS = 24 * HOUR // a plant not watered for this long wilts (and grows no more until watered)
-  const GROW_MS = 4 * HOUR // watering at least this long after its last growth grows the plant one stage
-  const LEAVE_MS = 24 * HOUR // an empty food or water bowl for this long: the pet leaves home
-  const LOW = 0.3
+  const { HOUR, LEAVE_MS, PRICES, EMPTY, needs, neglect, adoptCost, seedCost, feed, drink, choosePet, choosePlant, water } =
+    window.petRules
   const HAPPY_MS = 4000 // the heart after feeding / watering
   const HEIGHT = 30
   const FRAME_MS = 166
   const STORAGE_KEY = 'petCorner'
   const SYNC_MS = 60 * 1000
-  const PRICES = {
-    pets: { none: 0, mouse: 0, bird: 0, cat: 0, dog: 0 }, // adopting is free; food and water cost
-    plants: { none: 0, cactus: 10, pothos: 15, sunflower: 20, rose: 30 },
-    feed: 5,
-    drink: 2,
-    water: 1
-  }
 
-  const EMPTY = { pet: 'none', leftPet: null, fedAt: 0, drankAt: 0, plant: 'none', stage: 0, wateredAt: 0, grewAt: 0 }
-
-  const level = (at, span, now) => Math.min(1, Math.max(0, 1 - (now - at) / span))
-
-  function needs(state, now) {
-    const food = level(state.fedAt, FOOD_MS, now)
-    const water = level(state.drankAt, DRINK_MS, now)
-    // Since when the first bowl has been empty (in the future while both still have some).
-    const emptySince = Math.min(state.fedAt + FOOD_MS, state.drankAt + DRINK_MS)
-    return {
-      food,
-      water,
-      isHungry: food < LOW,
-      isThirsty: water < LOW,
-      isDry: now - state.wateredAt > DRY_MS,
-      leavesIn: emptySince + LEAVE_MS - now
-    }
-  }
-
-  // The pet gone when a bowl has been empty for LEAVE_MS; `leftPet` remembers who left, for the message.
-  function runAway(state, now) {
-    if (state.pet === 'none' || needs(state, now).leavesIn > 0) return state
-    return { ...state, pet: 'none', leftPet: state.pet }
-  }
-
-  const feed = (state, now) => ({ ...state, fedAt: now })
-  const drink = (state, now) => ({ ...state, drankAt: now })
-  const choosePet = (state, pet, now) => ({ ...state, pet, leftPet: null, fedAt: now, drankAt: now })
-  const choosePlant = (state, plant, now) => ({ ...state, plant, stage: 0, wateredAt: now, grewAt: now })
-
-  // A cared-for plant grows a stage per watering, at most one every GROW_MS; a dry one only recovers.
-  function water(state, now) {
-    const canGrow = !needs(state, now).isDry && state.stage < 3 && now - state.grewAt >= GROW_MS
-    return { ...state, wateredAt: now, ...(canGrow ? { stage: state.stage + 1, grewAt: now } : {}) }
-  }
-
-  window.petCorner = { needs, feed, drink, water, choosePet, choosePlant, runAway, handleLanguageChanged: () => {} }
+  window.petCorner = { handleLanguageChanged: () => {} }
 
   const canvas = document.getElementById('corner')
   if (!canvas) return
@@ -123,19 +74,20 @@
   const handleWater = () => buy(PRICES.water, water)
   const handlePetChange = (event) => {
     const pet = event.target.value
-    buy(PRICES.pets[pet], (current, now) => choosePet(current, pet, now))
+    buy(adoptCost(state, pet), (current, now) => choosePet(current, pet, now))
   }
   const handlePlantChange = (event) => {
     const plant = event.target.value
-    buy(PRICES.plants[plant], (current, now) => choosePlant(current, plant, now))
+    buy(seedCost(state, plant), (current, now) => choosePlant(current, plant, now))
   }
 
-  function fillSelect(select, names, prices, value) {
+  function fillSelect(select, names, costOf, value) {
     select.replaceChildren(
       ...Object.entries(names).map(([key, name]) => {
         const option = document.createElement('option')
+        const cost = costOf(key)
         option.value = key
-        option.textContent = prices[key] ? `${name} · ${i18n.t.corner.price(prices[key])}` : name
+        option.textContent = cost ? `${name} · ${i18n.t.corner.price(cost)}` : name
         option.selected = key === value
         return option
       })
@@ -145,8 +97,8 @@
   // Labels, choices and buttons in the panel's language, and which buttons apply.
   function render() {
     const t = i18n.t.corner
-    fillSelect(document.getElementById('pet'), t.pets, PRICES.pets, state.pet)
-    fillSelect(document.getElementById('plant'), t.plants, PRICES.plants, state.plant)
+    fillSelect(document.getElementById('pet'), t.pets, (pet) => adoptCost(state, pet), state.pet)
+    fillSelect(document.getElementById('plant'), t.plants, (plant) => seedCost(state, plant), state.plant)
     document.getElementById('coins').textContent = coins === null ? '' : t.coins(coins)
     for (const action of ['feed', 'drink', 'water']) {
       const button = document.getElementById(action)
@@ -160,12 +112,14 @@
   function renderInfo() {
     const t = i18n.t.corner
     const now = Date.now()
-    const { food, water: drinkLevel, isDry, leavesIn } = needs(state, now)
+    const { food, water: drinkLevel, isDry, leavesIn, diesIn } = needs(state, now)
     const parts = []
     if (state.leftPet) parts.push(t.leftHome(t.pets[state.leftPet]))
     if (state.pet !== 'none') parts.push(t.petInfo(t.pets[state.pet], Math.round(food * 100), Math.round(drinkLevel * 100)))
     if (state.pet !== 'none' && leavesIn < LEAVE_MS) parts.push(t.starving(Math.max(1, Math.ceil(leavesIn / HOUR))))
+    if (state.deadPlant) parts.push(t.plantDied(t.plants[state.deadPlant]))
     if (state.plant !== 'none') parts.push(t.plantInfo(t.plants[state.plant], t.stages[state.stage], isDry))
+    if (state.plant !== 'none' && isDry) parts.push(t.dying(Math.max(1, Math.ceil(diesIn / HOUR))))
     info.textContent = [notice, ...parts].filter(Boolean).join(' · ')
   }
 
@@ -223,7 +177,7 @@
   }
 
   function checkOnPet() {
-    const after = runAway(state, Date.now())
+    const after = neglect(state, Date.now())
     if (after !== state) {
       state = after
       void save()

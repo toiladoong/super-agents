@@ -4,15 +4,15 @@
   <head><meta charset="utf-8" /><title>running</title></head>
   <body>
     <pre id="out"></pre>
-    <script src="pets.js"></script>
+    <script src="pet-rules.js"></script>
     <script>
       const failures = []
       const check = (ok, message) => ok || failures.push(message)
-      const { needs, feed, drink, water, choosePet, choosePlant, runAway } = window.petCorner
+      const { EMPTY, needs, feed, drink, water, choosePet, choosePlant, neglect, adoptCost, seedCost } = window.petRules
       const HOUR = 60 * 60 * 1000
       const start = 1000 * HOUR
 
-      let pet = choosePet({}, 'cat', start)
+      let pet = choosePet(EMPTY, 'cat', start)
       check(needs(pet, start).food === 1 && !needs(pet, start).isHungry, 'a new pet starts fed and watered')
       check(needs(pet, start + 6 * HOUR).isHungry, 'after 6 of 8 hours the bowl is low: hungry')
       check(needs(pet, start + 5 * HOUR).isThirsty, 'after 5 of 6 hours: thirsty')
@@ -20,15 +20,31 @@
       pet = feed(pet, start + 6 * HOUR)
       check(!needs(pet, start + 6 * HOUR).isHungry, 'feeding fills the bowl')
 
-      const neglected = choosePet({}, 'dog', start)
+      const neglected = choosePet(EMPTY, 'dog', start)
       // Water runs out first, at 6 hours; a day after that the dog leaves.
-      check(runAway(neglected, start + 29 * HOUR) === neglected, 'still home 23 hours after the water ran out')
-      const gone = runAway(neglected, start + 31 * HOUR)
+      check(neglect(neglected, start + 29 * HOUR) === neglected, 'still home 23 hours after the water ran out')
+      const gone = neglect(neglected, start + 31 * HOUR)
       check(gone.pet === 'none' && gone.leftPet === 'dog', 'a day after a bowl ran empty, the pet leaves home')
-      check(runAway(drink(neglected, start + 29 * HOUR), start + 31 * HOUR).pet === 'dog', 'water in time keeps it home')
+      check(neglect(drink(neglected, start + 29 * HOUR), start + 31 * HOUR).pet === 'dog', 'water in time keeps it home')
       check(choosePet(gone, 'cat', start).leftPet === null, 'adopting another clears the message')
 
-      let plant = choosePlant({}, 'rose', start)
+      // Choosing is free; only the one after a loss costs, and only that one starts with full bowls / wet soil.
+      check(adoptCost(neglected, 'dog') === 0 && adoptCost(gone, 'dog') === 50, 'a pet costs only after one ran away')
+      const switched = choosePet(neglected, 'cat', start + 20 * HOUR)
+      check(switched.fedAt === neglected.fedAt && switched.drankAt === neglected.drankAt, 'switching keeps the bowls')
+      check(choosePet(gone, 'cat', start + 31 * HOUR).fedAt === start + 31 * HOUR, 'the pet bought after a loss starts fed')
+      const given = choosePet(neglected, 'none', start + HOUR)
+      check(choosePet(given, 'dog', start + 2 * HOUR).fedAt === neglected.fedAt, 'giving away and adopting again: no refill')
+
+      const potted = choosePlant(EMPTY, 'rose', start)
+      check(neglect(potted, start + 71 * HOUR).plant === 'rose', 'dry under 3 days: still alive')
+      const dead = neglect(potted, start + 73 * HOUR)
+      check(dead.plant === 'none' && dead.deadPlant === 'rose', '3 days without water: the plant dies')
+      check(seedCost(potted, 'cactus') === 0 && seedCost(dead, 'cactus') === 10, 'a plant costs only after one died')
+      check(choosePlant(potted, 'cactus', start + 20 * HOUR).wateredAt === start, 'switching plants keeps the soil dry')
+      check(choosePlant(dead, 'cactus', start + 80 * HOUR).wateredAt === start + 80 * HOUR, 'the plant bought after a loss starts watered')
+
+      let plant = choosePlant(EMPTY, 'rose', start)
       plant = water(plant, start + HOUR)
       check(plant.stage === 0, 'no growth sooner than 4 hours after planting')
       plant = water(plant, start + 5 * HOUR)
@@ -37,7 +53,7 @@
       plant = water(plant, start + 13 * HOUR)
       plant = water(plant, start + 17 * HOUR)
       check(plant.stage === 3, 'stops at stage 3 (in flower)')
-      const dry = choosePlant({}, 'cactus', start)
+      const dry = choosePlant(EMPTY, 'cactus', start)
       check(needs(dry, start + 25 * HOUR).isDry, 'a day without water: dry')
       check(water(dry, start + 25 * HOUR).stage === 0, 'a dry plant recovers but does not grow on that watering')
 
