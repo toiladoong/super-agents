@@ -11,7 +11,7 @@ commands that change state.
 - Detect devices at run time (don't guess IP / serial). None found → report to the orchestrator.
 - Read the spec's `notes`: how to run the app, devices, the repo's test accounts.
 
-## Real environment (`--env`)
+## Real environment (`env`)
 The spec gives a URL (e.g. a staging or production web domain) instead of a local build:
 - Start no dev server, build nothing: open that URL (the repo's browser / device tools as usual).
 - **First check the environment runs the code under test**: the version / commit it shows (a version endpoint, a

@@ -2,7 +2,7 @@
 name: review
 description: Review already-written code with a team of Orca workers (reviewer + skeptic, coder fixes blocking issues, tester), or compactly in one tab with subagents via here — a shortcut for the dev skill's review mode. Use when the user calls /review or asks to have agents review uncommitted changes / a branch.
 ---
-# /review [here | off] [ticket] [branch] [--env <name|url>]
+# /review [here | off] [ticket] [branch] [env <name|url>]
 
 Shortcut for `/dev review`: read `../dev/SKILL.md` (same plugin; its `SKILL_DIR` is the `dev` directory next to this
 one), then run exactly as if the user typed `/dev review <args>`, following the `/dev review` section in
@@ -11,7 +11,7 @@ one), then run exactly as if the user typed `/dev review <args>`, following the 
 - No arguments → review the uncommitted changes in the current checkout.
 - A branch → review that branch.
 - A ticket → use the ticket to write the acceptance criteria.
-- `--env <name|url>` → the tester tests that real environment (`environments` in `.agents/team.json`, or a URL)
+- `env <name|url>` → the tester tests that real environment (`environments` in `.agents/team.json`, or a URL)
   instead of a local build.
 - `here` → run compactly in this tab with subagents, without opening Orca tabs / workers (the `here` section in
   `../dev/modes.md`). After the review, always stop and ask the user which issues to fix; fix nothing until confirmed.

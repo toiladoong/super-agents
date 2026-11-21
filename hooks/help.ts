@@ -17,7 +17,7 @@ export const OFFICE_HELP: Record<Lang, string> = {
 - **\`/super-agents:dev plan <ticket>\`** chỉ lập kế hoạch rồi dừng, lưu **\`.agents/plans/<ticket>.md\`**; chạy **\`/super-agents:dev <ticket>\`** sau để làm theo
 - **\`/super-agents:review [ticket] [nhánh]\`** chỉ review code đã viết; ticket làm tiêu chí nghiệm thu, không ghi nhánh = thay đổi chưa commit
 - **\`/super-agents:review here [ticket]\`** review gọn trong tab này bằng subagent, không mở tab / worker mới; hỏi bạn chọn lỗi trước khi sửa
-- Thêm **\`--env <tên|url>\`** để tester test trên môi trường thật (tên lấy từ \`environments\` trong team.json)
+- Thêm **\`env <tên|url>\`** để tester test trên môi trường thật (tên lấy từ \`environments\` trong team.json)
 - **\`/super-agents:dev status\`** xem worker nào đang làm / rảnh
 - Đóng pane là dừng cập nhật; **\`/office\`** mở lại.
 - Ngôn ngữ: \`"language": "vi" | "en"\` trong **\`.agents/team.json\`** (mặc định tiếng Việt).`,
@@ -36,7 +36,7 @@ export const OFFICE_HELP: Record<Lang, string> = {
 - **\`/super-agents:dev plan <ticket>\`** only plans and stops, saving **\`.agents/plans/<ticket>.md\`**; run **\`/super-agents:dev <ticket>\`** later to follow it
 - **\`/super-agents:review [ticket] [branch]\`** only reviews written code; the ticket gives the acceptance criteria, no branch = uncommitted changes
 - **\`/super-agents:review here [ticket]\`** reviews right in this tab with subagents, no new tab / worker; asks you which findings to fix first
-- Add **\`--env <name|url>\`** so the tester tests a real environment (names from \`environments\` in team.json)
+- Add **\`env <name|url>\`** so the tester tests a real environment (names from \`environments\` in team.json)
 - **\`/super-agents:dev status\`** shows which workers are busy / free
 - Closing the pane stops the updates; **\`/office\`** opens it again.
 - Language: \`"language": "vi" | "en"\` in **\`.agents/team.json\`** (Vietnamese by default).`

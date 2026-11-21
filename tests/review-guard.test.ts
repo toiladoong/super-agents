@@ -42,6 +42,8 @@ test('reads the person’s answer', async () => {
   expect(reviewMode('--here SG-1')).toBe('here')
   expect(reviewMode('SG-1 --here')).toBe('here')
   expect(reviewMode('SG-1 click here')).toBeNull()
+  expect(reviewMode('env staging here SG-1')).toBe('here')
+  expect(reviewMode('here SG-1 env https://staging.example.com')).toBe('here')
   expect(afterReviewCommand(off, 'super-agents:review', 'here')).toEqual({ isActive: true, isTurnAllowed: false })
   expect(afterReviewCommand(off, 'super-agents:dev', 'review here SG-1')).toEqual({ isActive: true, isTurnAllowed: false })
   expect(afterReviewCommand(off, 'super-agents:dev', 'plan here SG-1')).toEqual(off)

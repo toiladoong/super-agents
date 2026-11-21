@@ -67,7 +67,8 @@ export function afterReviewCommand(state: ReviewGuard, skill: string, args: stri
 
 // The mode word of a review call: "here" / "off" as its first word (the old "--here" / "--off" anywhere still count).
 export function reviewMode(args: string): 'here' | 'off' | null {
-  const first = args.trim().split(/\s+/)[0]?.toLowerCase().replace(/^--/, '')
+  // A leading `env <name|url>` (the test environment) comes before the mode word too.
+  const first = args.trim().replace(/^(--)?env\s+\S+\s*/i, '').split(/\s+/)[0]?.toLowerCase().replace(/^--/, '')
   if (first === 'here' || first === 'off') return first
   if (/--off\b/.test(args)) return 'off'
   return /--here\b/.test(args) ? 'here' : null
