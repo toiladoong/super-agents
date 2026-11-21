@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- Self-check for the pet corner's rules: open in a browser (or headless Chrome with --dump-dom); the title says PASS or FAIL. -->
+<html>
+  <head><meta charset="utf-8" /><title>running</title></head>
+  <body>
+    <pre id="out"></pre>
+    <script src="pets.js"></script>
+    <script>
+      const failures = []
+      const check = (ok, message) => ok || failures.push(message)
+      const { needs, feed, water, choosePet, choosePlant } = window.petCorner
+      const HOUR = 60 * 60 * 1000
+      const start = 1000 * HOUR
+
+      let pet = choosePet({}, 'cat', start)
+      check(needs(pet, start).food === 1 && !needs(pet, start).isHungry, 'a new pet starts fed and watered')
+      check(needs(pet, start + 6 * HOUR).isHungry, 'after 6 of 8 hours the bowl is low: hungry')
+      check(needs(pet, start + 5 * HOUR).isThirsty, 'after 5 of 6 hours: thirsty')
+      check(needs(pet, start + 30 * HOUR).food === 0, 'levels stop at empty')
+      pet = feed(pet, start + 6 * HOUR)
+      check(!needs(pet, start + 6 * HOUR).isHungry, 'feeding fills the bowl')
+
+      let plant = choosePlant({}, 'rose', start)
+      plant = water(plant, start + HOUR)
+      check(plant.stage === 0, 'no growth sooner than 4 hours after planting')
+      plant = water(plant, start + 5 * HOUR)
+      check(plant.stage === 1, 'watered 4+ hours later: one stage')
+      plant = water(plant, start + 9 * HOUR)
+      plant = water(plant, start + 13 * HOUR)
+      plant = water(plant, start + 17 * HOUR)
+      check(plant.stage === 3, 'stops at stage 3 (in flower)')
+      const dry = choosePlant({}, 'cactus', start)
+      check(needs(dry, start + 25 * HOUR).isDry, 'a day without water: dry')
+      check(water(dry, start + 25 * HOUR).stage === 0, 'a dry plant recovers but does not grow on that watering')
+
+      document.getElementById('out').textContent = failures.length ? failures.join('\n') : 'all checks passed'
+      document.title = failures.length ? 'FAIL' : 'PASS'
+    </script>
+  </body>
+</html>

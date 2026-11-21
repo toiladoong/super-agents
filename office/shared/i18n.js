@@ -24,7 +24,21 @@
       modelDefault: 'mặc định',
       modelCustom: 'nhập tên khác…',
       rolePlaceholder: 'vai mặc định của plugin',
-      badJson: (error) => `File không phải JSON hợp lệ (${error}). Sửa ở chế độ Source trước.`
+      badJson: (error) => `File không phải JSON hợp lệ (${error}). Sửa ở chế độ Source trước.`,
+      corner: {
+        pets: { none: 'Không nuôi', dog: 'Chó', cat: 'Mèo', mouse: 'Chuột', bird: 'Chim' },
+        plants: { none: 'Không trồng', cactus: 'Xương rồng', sunflower: 'Hướng dương', pothos: 'Trầu bà', rose: 'Hoa hồng' },
+        stages: ['mới gieo', 'nảy mầm', 'đang lớn', 'trưởng thành'],
+        feed: '🍖 Cho ăn',
+        drink: '💧 Cho uống',
+        water: '🚿 Tưới cây',
+        petInfo: (name, food, water) => `${name}: no ${food}%, nước ${water}%`,
+        plantInfo: (name, stage, isDry) => `${name}: ${stage}${isDry ? ', khô héo, cần tưới' : ''}`,
+        coins: (count) => `🪙 ${count} xu`,
+        price: (cost) => `${cost} xu`,
+        notEnough: (cost) => `Chưa đủ xu (cần ${cost}). Hoàn thành việc trong Orca để kiếm thêm.`,
+        earned: (count) => `+${count} xu nhờ việc vừa hoàn thành`
+      }
     },
     en: {
       states: { working: 'working', blocked: 'needs you', waiting: 'waiting', done: 'done' },
@@ -48,7 +62,21 @@
       modelDefault: 'default',
       modelCustom: 'type another name…',
       rolePlaceholder: 'plugin default role',
-      badJson: (error) => `The file is not valid JSON (${error}). Fix it in Source view first.`
+      badJson: (error) => `The file is not valid JSON (${error}). Fix it in Source view first.`,
+      corner: {
+        pets: { none: 'No pet', dog: 'Dog', cat: 'Cat', mouse: 'Mouse', bird: 'Bird' },
+        plants: { none: 'No plant', cactus: 'Cactus', sunflower: 'Sunflower', pothos: 'Pothos', rose: 'Rose' },
+        stages: ['just planted', 'sprouting', 'growing', 'grown'],
+        feed: '🍖 Feed',
+        drink: '💧 Water bowl',
+        water: '🚿 Water plant',
+        petInfo: (name, food, water) => `${name}: food ${food}%, water ${water}%`,
+        plantInfo: (name, stage, isDry) => `${name}: ${stage}${isDry ? ', wilting, needs water' : ''}`,
+        coins: (count) => `🪙 ${count} coins`,
+        price: (cost) => `${cost} coins`,
+        notEnough: (cost) => `Not enough coins (needs ${cost}). Finish work in Orca to earn more.`,
+        earned: (count) => `+${count} coins for work just finished`
+      }
     }
   }
 
@@ -62,6 +90,7 @@
         <li>Áo theo vai, chữ trên ngực: <b>O</b> tím orchestrator · <b>RS</b> xanh dương researcher · <b>C</b> xanh lá coder · <b>RV</b> cam reviewer · <b>S</b> vàng skeptic · <b>T</b> hồng tester · áo xám không chữ: chưa rõ vai</li>
         <li>Màu tóc theo AI: cam Claude · đen Codex · xanh Antigravity · tím Cursor · nâu OpenCode</li>
         <li>Rê chuột lên bàn: tên, AI, vai, trạng thái, thời gian</li>
+        <li>Góc thư giãn: nuôi chó / mèo / chuột / chim (cho ăn, cho uống; đói hay khát thì nó ra ngồi chờ bên bát) và trồng cây (tưới để lớn dần tới khi ra hoa, quá 1 ngày không tưới thì héo). Mọi thứ trả bằng xu: mỗi việc worker xong +10 xu, cả ticket xong (mọi việc của Run) thưởng thêm 30 xu</li>
       </ul>
       <ul>
         <li>Hiện agent của mọi workspace trong Orca, tên bàn là tên phiên (như ở sidebar Orca); cập nhật mỗi 3 giây.</li>
@@ -84,6 +113,7 @@
         <li>Shirt by role, letter on the chest: <b>O</b> purple orchestrator · <b>RS</b> blue researcher · <b>C</b> green coder · <b>RV</b> orange reviewer · <b>S</b> yellow skeptic · <b>T</b> pink tester · grey with no letter: role unknown</li>
         <li>Hair by AI: orange Claude · black Codex · blue Antigravity · purple Cursor · brown OpenCode</li>
         <li>Hover a desk: name, AI, role, state, time</li>
+        <li>Pet corner: keep a dog / cat / mouse / bird (feed it, fill its water; hungry or thirsty, it waits by the bowl) and a plant (water it to grow it up to flowering; a day without water wilts it). Everything costs coins: each finished worker task +10, a whole ticket done (every task of its Run) +30 more</li>
       </ul>
       <ul>
         <li>Shows the agents of every Orca workspace; a desk is named after its session (as in Orca's sidebar); updated every 3 seconds.</li>

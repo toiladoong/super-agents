@@ -86,6 +86,11 @@ chữ cái trên ngực áo (O orchestrator, RS researcher, C coder, RV reviewer
 (đọc từ tên tab: `coder · …`), tóc theo AI; gõ phím = đang làm, giơ tay + "!" = cần bạn, "…" + cốc cà phê = đang chờ,
 "✓" = xong (rời bàn sau 10 phút). Rê chuột lên bàn để xem tên, vai, trạng thái, thời gian.
 
+**Góc thư giãn** dưới văn phòng: nuôi chó / mèo / chuột / chim (cho ăn, cho uống; đói hay khát thì nó ra ngồi chờ bên
+bát) và trồng cây (xương rồng, hướng dương, trầu bà, hoa hồng: tưới để lớn dần tới khi ra hoa, quá 1 ngày không tưới thì
+héo). Mọi thứ trả bằng xu: mỗi việc worker trong Orca xong +10 xu, cả ticket xong (mọi việc của Run) thưởng thêm 30 xu;
+bắt đầu với 30 xu. Thú nuôi, cây và ví xu lưu trong bộ nhớ riêng của plugin (quyền `storage:own`).
+
 ```
 orca plugin dev load <thư mục plugin>/office            # in ra fingerprint
 orca plugin dev load <thư mục plugin>/office --approve <fingerprint>

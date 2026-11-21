@@ -72,6 +72,29 @@
         margin: 6px 0;
         padding-left: 18px;
       }
+      #corner {
+        display: block;
+        width: 100%;
+        image-rendering: pixelated;
+      }
+      #corner-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 6px 10px 0;
+      }
+      #coins {
+        align-self: center;
+        margin-right: 4px;
+      }
+      #corner-controls select,
+      #corner-controls button {
+        font: inherit;
+      }
+      #corner-info {
+        padding: 4px 10px 0;
+        opacity: 0.8;
+      }
       #status {
         padding: 6px 10px;
         opacity: 0.7;
@@ -89,6 +112,16 @@
   <body>
     <button id="open-team">⚙ Team</button>
     <canvas id="office"></canvas>
+    <canvas id="corner"></canvas>
+    <div id="corner-controls">
+      <b id="coins"></b>
+      <select id="pet"></select>
+      <button id="feed"></button>
+      <button id="drink"></button>
+      <select id="plant"></select>
+      <button id="water"></button>
+    </div>
+    <div id="corner-info"></div>
     <div id="status"></div>
     <details id="help" open>
       <summary id="guide-title"></summary>
@@ -98,6 +131,8 @@
     <script src="../shared/i18n.js"></script>
     <script src="agents.js"></script>
     <script src="sprites.js"></script>
+    <script src="pet-sprites.js"></script>
+    <script src="pets.js"></script>
     <script src="office.js"></script>
   </body>
 </html>

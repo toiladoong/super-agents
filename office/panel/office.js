@@ -142,6 +142,7 @@
     document.getElementById('guide-title').textContent = i18n.t.guideTitle
     document.getElementById('guide-body').innerHTML = i18n.guide
     document.getElementById('open-team').title = i18n.t.teamButtonTitle
+    window.petCorner.handleLanguageChanged()
     draw()
   }
 

@@ -2,8 +2,8 @@
   "manifestVersion": 2,
   "id": "super-agents-office",
   "name": "Agent Office",
-  "version": "0.8.1",
-  "description": "Văn phòng pixel cho các agent đang chạy trong Orca, và trình sửa trực quan team.json của super-agents (vai, AI, model, luật repo).",
+  "version": "0.9.0",
+  "description": "Văn phòng pixel cho các agent đang chạy trong Orca (kèm thú nuôi và cây trồng), và trình sửa trực quan team.json của super-agents (vai, AI, model, luật repo).",
   "engines": {
     "orca": ">=1.4.248"
   },
@@ -60,6 +60,9 @@
     },
     {
       "kind": "settings:own"
+    },
+    {
+      "kind": "storage:own"
     }
   ],
   "main": "worker/main.ts"

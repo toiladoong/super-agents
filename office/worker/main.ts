@@ -8,6 +8,9 @@ import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import type { OrcaWorkerApi } from 'orca/worker'
 
+import { NEW_WALLET, reward, spend } from './wallet'
+import type { RunTasks, Wallet } from './wallet'
+
 const TEAM_PATH = '.agents/team.json'
 // The super-agents defaults, next to this plugin in the same repo (missing when only this folder was installed).
 const DEFAULT_TEAM_URL = new URL('../../skills/dev/team.default.json', import.meta.url)
@@ -128,7 +131,49 @@ export async function createTeamFile(workspace: { path: string; hostId: string |
   return true
 }
 
+// The Runs (tickets) not paid yet, each with its tasks' status, from the orca CLI.
+async function unpaidRuns(paidRuns: string[]): Promise<RunTasks[]> {
+  type RunRow = { id: string; legacy?: boolean }
+  const runs: RunRow[] = JSON.parse(await runOrca(['orchestration', 'run-list', '--json']))?.result?.runs ?? []
+  const open = runs.filter((run) => !run.legacy && !paidRuns.includes(run.id))
+  return Promise.all(
+    open.map(async (run) => {
+      const listing = JSON.parse(await runOrca(['orchestration', 'task-list', '--run', run.id, '--json']))
+      return { id: run.id, tasks: listing?.result?.tasks ?? [] }
+    })
+  )
+}
+
+const WALLET_KEY = 'wallet'
+
 export default function activate(orca: OrcaWorkerApi): void {
+  // One wallet change at a time, so a sync and a purchase never overwrite each other.
+  let walletQueue: Promise<unknown> = Promise.resolve()
+  function withWallet<T>(change: (wallet: Wallet) => Promise<{ wallet: Wallet; answer: T }>): Promise<T> {
+    const next = walletQueue.then(async () => {
+      const wallet = ((await orca.storage.get(WALLET_KEY)) as Wallet | null) ?? NEW_WALLET
+      const result = await change(wallet)
+      if (result.wallet !== wallet) await orca.storage.set(WALLET_KEY, result.wallet)
+      return result.answer
+    })
+    walletQueue = next.catch(() => {})
+    return next
+  }
+
+  // Pays the Orca tasks / Runs finished since the last sync.
+  orca.panels.handle('wallet.sync', () =>
+    withWallet(async (wallet) => {
+      const paid = reward(wallet, await unpaidRuns(wallet.paidRuns))
+      return { wallet: paid.earned ? paid.wallet : wallet, answer: { coins: paid.wallet.coins, earned: paid.earned } }
+    })
+  )
+  orca.panels.handle('wallet.spend', (input) =>
+    withWallet(async (wallet) => {
+      const cost = Number((input as { cost?: unknown } | undefined)?.cost)
+      const after = spend(wallet, cost)
+      return after ? { wallet: after, answer: { ok: true, coins: after.coins } } : { wallet, answer: { ok: false, coins: wallet.coins } }
+    })
+  )
   orca.panels.handle('agents.snapshot', async () => ({ agents: await agentsSnapshot() }))
   orca.panels.handle('language.get', async () => ({ language: await panelLanguage(orca) }))
 
