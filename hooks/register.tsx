@@ -6,7 +6,7 @@ import { MAIN_KEY, newActivity, officeAgents } from './agents'
 import { OFFICE_HELP } from './help'
 import { TEAM_FILE, TEXT, languageOf } from './i18n'
 import type { Lang } from './i18n'
-import { DENY_REASON, EDIT_TOOLS, afterPrompt, afterReviewCommand, afterTurn, guardStatus, suggestionAfterTurn } from './review-guard'
+import { DENY_REASON, afterPrompt, afterReviewCommand, afterTurn, guardStatus, isLockedEdit, suggestionAfterTurn } from './review-guard'
 import type { ReviewGuard } from './review-guard'
 import { elapsed, officeSvg } from './office-svg'
 
@@ -106,7 +106,7 @@ export const register: Register = (on) => {
   // An `ask` puts the call to the person: that loop raises its hand until the call runs or the turn ends.
   // Also the review --here guard: if this hook fails before deciding, the call is refused rather than let through.
   on('tool.check', async ($, e, next) => {
-    if (EDIT_TOOLS.has(e.tool)) {
+    if (isLockedEdit(e.tool, e.input)) {
       const guardState = await read($, reviewGuard)
       if (guardState.isActive && !guardState.isTurnAllowed) return { decision: 'deny' as const, reason: DENY_REASON }
     }

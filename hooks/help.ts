@@ -18,6 +18,7 @@ export const OFFICE_HELP: Record<Lang, string> = {
 - **\`/super-agents:review [ticket] [nhánh]\`** chỉ review code đã viết; ticket làm tiêu chí nghiệm thu, không ghi nhánh = thay đổi chưa commit
 - **\`/super-agents:review here [ticket]\`** review gọn trong tab này bằng subagent, không mở tab / worker mới; hỏi bạn chọn lỗi trước khi sửa
 - Thêm **\`env <tên|url>\`** để tester test trên môi trường thật (tên lấy từ \`environments\` trong team.json)
+- **\`/super-agents:audit [here] [thư mục]\`** rà cả repo (hoặc thư mục) tìm lỗi, chỗ chậm, code thừa (dùng ponytail-audit); báo bảng đánh số, không sửa gì
 - **\`/super-agents:dev status\`** xem worker nào đang làm / rảnh
 - **\`/super-agents:setup\`** cài nốt phần máy này còn thiếu: panel Orca, skill orchestration, bản cho Codex
 - Đóng pane là dừng cập nhật; **\`/office\`** mở lại.
@@ -38,6 +39,7 @@ export const OFFICE_HELP: Record<Lang, string> = {
 - **\`/super-agents:review [ticket] [branch]\`** only reviews written code; the ticket gives the acceptance criteria, no branch = uncommitted changes
 - **\`/super-agents:review here [ticket]\`** reviews right in this tab with subagents, no new tab / worker; asks you which findings to fix first
 - Add **\`env <name|url>\`** so the tester tests a real environment (names from \`environments\` in team.json)
+- **\`/super-agents:audit [here] [folder]\`** audits the whole repo (or folders) for bugs, slow paths, dead code (with ponytail-audit); a numbered report, fixes nothing
 - **\`/super-agents:dev status\`** shows which workers are busy / free
 - **\`/super-agents:setup\`** installs what this machine still lacks: the Orca panel, the orchestration skill, the Codex plugin
 - Closing the pane stops the updates; **\`/office\`** opens it again.

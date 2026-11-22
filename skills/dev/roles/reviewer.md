@@ -22,6 +22,14 @@ Two levels: **blocking** (proven bugs: wrong logic, security, data loss, broken 
 concrete scenario that triggers it. Report only what you verified; if unsure, write "needs verification" and keep it at
 suggestion level. If there are no issues, say so clearly.
 
+## When assigned to audit
+The spec says "audit" with a part of the repo (folders): review the code **as it is**, every file of the part, not a
+diff. If `/ponytail:ponytail-audit` is available (Claude with the ponytail plugin) → run it on that part first (tell it
+the folders) and keep its findings: "Must fix" → **blocking**, the rest → **suggestion**. Then add what it does not
+know: the repo's rules (`AGENTS.md` / `CLAUDE.md`, `.claude/rules/`, the `notes` files of the spec) and code shared
+with other parts (grep its users outside the part before calling it dead). Report as below, each finding with
+`file:line` and a concrete case; a pattern repeated in many files is one finding listing the places.
+
 ## When assigned as skeptic
 The spec says "skeptic" with a list of blocking issues: don't look for new issues. For each issue, try to **refute** it
 — look at the callers, whether the code is actually reached, whether the framework / another place already handles it,

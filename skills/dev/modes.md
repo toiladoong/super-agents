@@ -34,6 +34,30 @@ Skip the Code step, start from Review on the written code.
 - **Test, acceptance:** as in steps 4, 5. For code in `current`, a dev server already running from this checkout can be
   used as is.
 
+## Audit the repo: `/dev audit [here] [path …]`
+A read-only health check of the code as it is (no diff): bugs, security holes, what breaks under real load, risky code
+without tests, slow paths, and what to delete / merge / split. **Fix nothing in this mode.**
+- **Scope:** the given paths, else the whole repo, skipping generated / vendored files (`node_modules`, `dist`,
+  `build`, lockfiles). Name the run after the scope (`audit-<paths or repo>`, per the "Ticket" naming rule).
+- **Split:** count the tracked files per top-level folder (`git ls-files`), then group the folders into at most 3 parts
+  of similar size, keeping the shared code (per `notes`) with its main users. Under ~200 files → one part. A part still
+  over ~300 files is split again by its subfolders; if that needs more than 3 parts, stop and ask the user to narrow the
+  scope (e.g. `/dev audit webApp/`) or to run the groups one after another — never give one reviewer a part it cannot
+  read in full. One `reviewer` worker per part on `--worktree current` (read-only), task title
+  `reviewer · audit <part>`.
+- **Each reviewer:** per the "Audit" section of `roles/reviewer.md` — Claude with the ponytail plugin runs
+  `/ponytail:ponytail-audit` on its part first, then adds the repo's own rules.
+- **Skeptic:** blocking findings exist → one skeptic worker, as in the "Adversarial review" section.
+- **Report:** merge the parts, drop duplicates, rank (`CONFIRMED` blocking first, then suggestions; the same issue in
+  several places is one finding listing the places). Save it to `.agents/audits/<YYYY-MM-DD>-<name>.md` (do not commit
+  until the user says so), show the numbered table and ask which to fix (e.g. "sửa 1, 3" / "fix 1, 3").
+- **Fixing:** the chosen findings become the ticket of a normal run from step 1 (spec → the user approves → coder per
+  part → review → test). Nothing is fixed without that approval.
+- **`here`:** the same in this tab with subagents per "In one tab" (at most 3 reviewer subagents in parallel, each with
+  `description` `reviewer · audit <part>`). Fixing then follows that section too, not a new run: **confirm before
+  fixing** ("sửa …" / "fix …"; the plugin's mod locks the edit tools for `dev audit here` as for `review here`), a
+  re-review of the fixed findings, and the closing line `✅ Review xong` / `✅ Review done`.
+
 ## Monitoring: `/dev status`
 Runs in any session (does not open an orchestrator tab). Gather from:
 - `orca orchestration task-list` — each worker's work and task status.

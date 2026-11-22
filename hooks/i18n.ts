@@ -14,8 +14,8 @@ export function languageOf(teamJson: string | null | undefined): Lang {
 
 export const TEXT = {
   vi: {
-    guardLocked: '🔒 review here: chưa sửa file — trả lời "sửa 1, 3" / "sửa hết lỗi chặn" để cho phép',
-    guardOpen: '✏️ review here: đang sửa các lỗi đã chọn',
+    guardLocked: '🔒 here: chưa sửa file — trả lời "sửa 1, 3" / "sửa hết lỗi chặn" để cho phép',
+    guardOpen: '✏️ here: đang sửa các lỗi đã chọn',
     suggestFix: 'sửa hết lỗi chặn',
     suggestDone: 'xong review',
     states: { working: 'đang làm', blocked: 'CẦN BẠN', waiting: 'đang chờ', done: 'xong' },
@@ -30,8 +30,8 @@ export const TEXT = {
     readFailed: 'Không đọc được danh sách agent: '
   },
   en: {
-    guardLocked: '🔒 review here: no file edits yet — answer "fix 1, 3" / "fix all blocking" to allow',
-    guardOpen: '✏️ review here: fixing the chosen findings',
+    guardLocked: '🔒 here: no file edits yet — answer "fix 1, 3" / "fix all blocking" to allow',
+    guardOpen: '✏️ here: fixing the chosen findings',
     suggestFix: 'fix all blocking',
     suggestDone: 'done review',
     states: { working: 'working', blocked: 'NEEDS YOU', waiting: 'waiting', done: 'done' },

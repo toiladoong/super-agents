@@ -1,8 +1,8 @@
 ---
 name: dev
-description: Run a ticket / feature with a team of Orca workers — the orchestrator coordinates (research) → plan → coder → review → test; /dev plan only makes the plan (saved to .agents/plans/<ticket>.md) then stops; /dev review for code already written; /dev research only investigates; /dev status shows which workers are busy / idle. Roles and AIs come from the repo's .agents/team.json (default Claude). Use when the user calls /dev, or asks to split work across several agents / Orca workers.
+description: Run a ticket / feature with a team of Orca workers — the orchestrator coordinates (research) → plan → coder → review → test; /dev plan only makes the plan (saved to .agents/plans/<ticket>.md) then stops; /dev review for code already written; /dev research only investigates; /dev audit checks the quality of the whole repo or some folders (with ponytail-audit) and reports, fixing nothing; /dev status shows which workers are busy / idle. Roles and AIs come from the repo's .agents/team.json (default Claude). Use when the user calls /dev, or asks to split work across several agents / Orca workers.
 ---
-# /dev <ticket or description> [--research] [env <name|url>]  ·  /dev plan [here] <ticket>  ·  /dev research <question>  ·  /dev review [here] <ticket> [branch] [env <name|url>]  ·  /dev status
+# /dev <ticket or description> [--research] [env <name|url>]  ·  /dev plan [here] <ticket>  ·  /dev research <question>  ·  /dev review [here] <ticket> [branch] [env <name|url>]  ·  /dev audit [here] [path …]  ·  /dev status
 
 `SKILL_DIR` = absolute path of the folder holding this file. Default roles are in `SKILL_DIR/roles/`, secondary modes
 in `SKILL_DIR/modes.md`.
@@ -15,13 +15,19 @@ in `SKILL_DIR/modes.md`.
   "Plan only" section in `modes.md`.
 - **`review` with the `here` flag** → do not open an orchestrator tab: you are the orchestrator in this tab, follow
   the "In one tab" section in `modes.md` (subagents instead of Orca workers).
+- **`audit`** → the "Audit the repo" section in `modes.md`; with `here` you run it in this tab with subagents,
+  otherwise open an orchestrator tab as below.
 - **Otherwise** (the user types `/dev` in a normal session) → open an orchestrator tab then stop, do not run the flow
   yourself:
 
   ```
   orca agent launch --agent <orchestrator.agent> [--model <orchestrator.model>] --worktree current --focus \
-    --prompt "You are the orchestrator. Read <SKILL_DIR>/SKILL.md and run with: <the exact arguments the user typed>"
+    --prompt "You are the orchestrator. Read <SKILL_DIR>/SKILL.md and run with: <the arguments as /dev gets them>"
   ```
+
+  The arguments as `/dev` gets them: what the user typed after `/dev`; from a shortcut skill, its mode first —
+  `/review SG-1` → `review SG-1`, `/audit webApp/` → `audit webApp/`. Without the mode word the orchestrator would take
+  `SG-1` / `webApp/` for a new ticket and start coding.
 
   Tell the user: discussion, spec approval and acceptance happen in the orchestrator tab. If the user says "be the
   orchestrator here" → skip this, you are the orchestrator.

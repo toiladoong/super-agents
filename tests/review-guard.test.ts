@@ -1,7 +1,7 @@
 import { expect, test } from 'claude-code/testing'
 
 import { languageOf } from '../hooks/i18n'
-import { DONE_MARKER, afterReviewCommand, reviewMode, confirmsFix, endsReview, isReviewSkill, movesOn, suggestionAfterTurn, typedReviewCommand } from '../hooks/review-guard'
+import { DONE_MARKER, afterReviewCommand, reviewMode, confirmsFix, endsReview, isLockedEdit, isReviewSkill, movesOn, suggestionAfterTurn, typedReviewCommand } from '../hooks/review-guard'
 
 test('reads the person’s answer', async () => {
   expect(confirmsFix('sửa 1, 3')).toBe(true)
@@ -47,6 +47,23 @@ test('reads the person’s answer', async () => {
   expect(afterReviewCommand(off, 'super-agents:review', 'here')).toEqual({ isActive: true, isTurnAllowed: false })
   expect(afterReviewCommand(off, 'super-agents:dev', 'review here SG-1')).toEqual({ isActive: true, isTurnAllowed: false })
   expect(afterReviewCommand(off, 'super-agents:dev', 'plan here SG-1')).toEqual(off)
+  expect(afterReviewCommand(off, 'super-agents:dev', 'audit here webApp/')).toEqual({ isActive: true, isTurnAllowed: false })
+  expect(afterReviewCommand(off, 'super-agents:dev', 'audit webApp/')).toEqual(off)
+  expect(typedReviewCommand('/super-agents:dev audit here')).toEqual({ skill: 'super-agents:dev', args: ' audit here' })
+  expect(afterReviewCommand(off, 'super-agents:audit', 'here webApp/')).toEqual({ isActive: true, isTurnAllowed: false })
+  expect(typedReviewCommand('/super-agents:audit here')).toEqual({ skill: 'super-agents:audit', args: ' here' })
+  expect(isReviewSkill('ponytail:ponytail-audit')).toBe(false)
+  expect(movesOn('/super-agents:audit')).toBe(false)
+  // The audit report is written before the person answers; every other edit waits.
+  expect(isLockedEdit('Write', { file_path: 'E:\\repo\\.agents\\audits\\2026-11-22-repo.md' })).toBe(false)
+  expect(isLockedEdit('Write', { file_path: '/repo/.agents/audits/x.md' })).toBe(false)
+  expect(isLockedEdit('Edit', { file_path: '/repo/src/a.ts' })).toBe(true)
+  expect(isLockedEdit('Edit', { file_path: '/repo/src/.agents/audits-old/a.ts' })).toBe(true)
+  expect(isLockedEdit('Read', { file_path: '/repo/src/a.ts' })).toBe(false)
+  expect(isLockedEdit('Write', undefined)).toBe(true)
+  expect(isLockedEdit('Write', { file_path: '.agents/audits/../../src/a.ts' })).toBe(true)
+  expect(isLockedEdit('Write', { file_path: 'E:\\repo\\.agents\\audits\\..\\..\\src\\a.ts' })).toBe(true)
+  expect(isLockedEdit('Write', { file_path: '.agents/audits/2026..notes.md' })).toBe(false)
 })
 
 test('edits wait for "sửa …" during review --here, one turn at a time', async ($, on) => {
@@ -57,6 +74,8 @@ test('edits wait for "sửa …" during review --here, one turn at a time', asyn
   const edit = () => $.tool.check({ tool: 'Edit', input: { file_path: 'a.ts', old_string: 'a', new_string: 'b' } })
   await $.prompt.submit({ text: '/super-agents:review here' })
   expect((await edit()).decision).toBe('deny')
+  const report = await $.tool.check({ tool: 'Write', input: { file_path: '.agents/audits/2026-11-22-repo.md', content: '#' } })
+  expect(report.decision).not.toBe('deny')
   await $.prompt.submit({ text: 'sửa 1' })
   expect((await edit()).decision).not.toBe('deny')
   await $.turn.complete({ answer: '', durationMs: 1, isAborted: false, turnId: 't1', reason: 'answer' } as never)
