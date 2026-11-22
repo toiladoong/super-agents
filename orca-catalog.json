@@ -16,6 +16,32 @@
       ],
       "releases": [
         {
+          "version": "0.13.2",
+          "commit": "bf916e3b7fd5e3da973e6746849d900ef91a4128",
+          "contentHash": "dc81b9bef5c60169d2ac71197282ae2e8cfc80536b0ce88501f74577fad772d0",
+          "execution": "trusted-worker",
+          "minimumOrca": "1.4.248",
+          "name": "Agent Office",
+          "contributes": [
+            {
+              "kind": "panels",
+              "name": "Agent Office"
+            },
+            {
+              "kind": "customEditors",
+              "name": "Team",
+              "detail": "team.json, team.default.json"
+            }
+          ],
+          "capabilities": [
+            "agent:read",
+            "workspace:read",
+            "workspace:write",
+            "settings:own",
+            "storage:own"
+          ]
+        },
+        {
           "version": "0.13.1",
           "commit": "62a5f6e0eab500525f0b89f563c582e687e72893",
           "contentHash": "8afd29f81854b7c1160622161e56f7c28be54df03a3f0606690b7e654109f7a6",
