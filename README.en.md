@@ -21,7 +21,8 @@ install link; Orca shows its own confirm: **Add catalog** → **Review & Install
 `orchestration` skill, and the Codex plugin when the machine has Codex.
 
 Update: `/plugin marketplace update super-agents` then `/plugin update super-agents@super-agents` (or `/reload-plugins`
-in an open session). The Orca panel: open the install link again.
+in an open session). Orca updates the panel from the catalog by itself (its default); a version that needs more access
+asks you to approve again.
 
 ### Manual install / notes
 - **Claude in Orca:** Orca's Claude profiles share `~/.claude/plugins` (junction). Install **from `~/.claude`**, not

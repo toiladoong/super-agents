@@ -21,7 +21,8 @@ Orca hiện hộp xác nhận **Add catalog** → **Review & Install** → duy�
 cho Codex nếu máy có Codex.
 
 Cập nhật: `/plugin marketplace update super-agents` rồi `/plugin update super-agents@super-agents` (hoặc
-`/reload-plugins` trong phiên đang mở). Panel Orca: mở lại link cài.
+`/reload-plugins` trong phiên đang mở). Panel Orca tự cập nhật từ danh mục (mặc định của Orca); bản mới cần thêm quyền
+thì Orca hỏi duyệt lại.
 
 ### Cài tay / ghi chú
 - **Claude trong Orca:** các profile Claude của Orca dùng chung `~/.claude/plugins` (junction). Cài **từ `~/.claude`**,

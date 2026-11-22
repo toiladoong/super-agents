@@ -15,6 +15,12 @@ if (run('git', ['status', '--porcelain'])) {
   console.error('Commit or stash your changes first.')
   process.exit(1)
 }
+// A push rejected after the tag would leave a half release behind: check the remote first.
+run('git', ['fetch', '-q'])
+if (/\bbehind\b/.test(run('git', ['status', '-sb']).split('\n')[0])) {
+  console.error('The branch is behind its remote: git pull first.')
+  process.exit(1)
+}
 
 const editJson = (file, change) => {
   const json = JSON.parse(readFileSync(file, 'utf8'))

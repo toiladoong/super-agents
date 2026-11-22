@@ -10,8 +10,10 @@ they write in another one). End with a short table: item, state (already there /
 
 1. **Orca**: `orca status` (or `orca --help`) must work. If `orca` is not found, stop: tell the user to install Orca
    and turn on its CLI, then run `/setup` again.
-2. **Agent Office panel**: `orca plugin list` lists `super-agents-office` → there. Otherwise open the install link,
-   which shows Orca's own confirm (**Add catalog** → **Review & Install** → approve the access):
+2. **Agent Office panel**: `orca plugin list` lists `super-agents-office` as `running` or `idle` → there. Listed
+   but `errored` / disabled (e.g. "no longer approved") → tell the user to approve or enable it in Orca Settings →
+   Plugins (or open the install link again); do not count it as installed. Not listed → open the install link, which
+   shows Orca's own confirm (**Add catalog** → **Review & Install** → approve the access):
    - Windows: PowerShell `Start-Process "orca://plugins/toiladoong.super-agents-office?catalog=https://github.com/toiladoong/super-agents.git"`
      (cmd / Git Bash: `start "" "<same link>"`)
    - macOS: `open "<same link>"`; Linux: `xdg-open "<same link>"`
