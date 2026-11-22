@@ -8,7 +8,7 @@
     <script>
       const failures = []
       const check = (ok, message) => ok || failures.push(message)
-      const { EMPTY, needs, feed, drink, water, choosePet, choosePlant, neglect, adoptCost, seedCost } = window.petRules
+      const { EMPTY, needs, feed, drink, water, choosePet, choosePlant, neglect, adoptCost, seedCost, wantsWater } = window.petRules
       const HOUR = 60 * 60 * 1000
       const start = 1000 * HOUR
 
@@ -53,6 +53,14 @@
       plant = water(plant, start + 13 * HOUR)
       plant = water(plant, start + 17 * HOUR)
       check(plant.stage === 3, 'stops at stage 3 (in flower)')
+      const sprout = choosePlant(EMPTY, 'rose', start)
+      check(!wantsWater(sprout, start + 3 * HOUR), 'no water drop before 4 hours: watering would not grow it')
+      check(wantsWater(sprout, start + 4 * HOUR), 'a water drop from 4 hours: watering grows it')
+      check(!wantsWater(water(sprout, start + 4 * HOUR), start + 5 * HOUR), 'just watered and grown: no drop')
+      check(!wantsWater({ ...sprout, stage: 3 }, start + 10 * HOUR), 'in flower: no drop until it gets dry')
+      check(wantsWater({ ...sprout, stage: 3 }, start + 25 * HOUR), 'dry, even in flower: a drop')
+      check(!wantsWater(EMPTY, start), 'no plant: no drop')
+
       const dry = choosePlant(EMPTY, 'cactus', start)
       check(needs(dry, start + 25 * HOUR).isDry, 'a day without water: dry')
       check(water(dry, start + 25 * HOUR).stage === 0, 'a dry plant recovers but does not grow on that watering')

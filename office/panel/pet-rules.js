@@ -1,7 +1,7 @@
 // The pet corner's rules, with no drawing: how bowls empty, when a pet leaves home or a plant dies, how a plant
 // grows, and what costs coins. Levels are worked out from timestamps, so they keep going while Orca is closed.
 // Exposes window.petRules = { HOUR, LEAVE_MS, PRICES, EMPTY, needs, neglect, adoptCost, seedCost, feed, drink,
-// choosePet, choosePlant, water }.
+// choosePet, choosePlant, water, wantsWater }.
 ;(function () {
   const HOUR = 60 * 60 * 1000
   const FOOD_MS = 8 * HOUR // a full bowl lasts this long
@@ -88,6 +88,12 @@
     return { ...state, wateredAt: now, ...(canGrow ? { stage: state.stage + 1, grewAt: now } : {}) }
   }
 
+  // Watering helps now: the plant would grow a stage, or it is dry.
+  function wantsWater(state, now) {
+    if (state.plant === 'none') return false
+    return needs(state, now).isDry || (state.stage < 3 && now - state.grewAt >= GROW_MS)
+  }
+
   window.petRules = {
     HOUR,
     LEAVE_MS,
@@ -101,6 +107,7 @@
     drink,
     choosePet,
     choosePlant,
-    water
+    water,
+    wantsWater
   }
 })()

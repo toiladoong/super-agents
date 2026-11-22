@@ -3,7 +3,7 @@
 // from the worker's wallet (worker/wallet.ts).
 // Exposes window.petCorner = { handleLanguageChanged }.
 ;(function () {
-  const { HOUR, LEAVE_MS, PRICES, EMPTY, needs, neglect, adoptCost, seedCost, feed, drink, choosePet, choosePlant, water } =
+  const { HOUR, LEAVE_MS, PRICES, EMPTY, needs, neglect, adoptCost, seedCost, feed, drink, choosePet, choosePlant, water, wantsWater } =
     window.petRules
   const HAPPY_MS = 4000 // the heart after feeding / watering
   const HEIGHT = 30
@@ -167,6 +167,8 @@
     const now = Date.now()
     const status = needs(state, now)
     if (state.plant !== 'none') drawPlant(ctx, state.plant, 10, HEIGHT - 9, state.stage, status.isDry)
+    // A water drop over the pot when watering helps (it would grow, or it is dry).
+    if (wantsWater(state, now)) drawBubble(ctx, 16, 2, 'water')
     if (state.pet === 'none') return
     const foodX = width - 22
     const waterX = width - 12
