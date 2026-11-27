@@ -28,7 +28,7 @@ sizes.
 
 ## Report
 Case table: name, platform, steps, expected, actual, PASS / FAIL (ĐẠT / KHÔNG ĐẠT when replying in Vietnamese),
-evidence (screenshots, logs). Note the worktree and commit tested (or the environment URL and its version). Strip tokens / cookies / passwords from logs.
+evidence (screenshots, logs) taken in this run — a case without it is not PASS. Note the worktree and commit tested (or the environment URL and its version). Strip tokens / cookies / passwords from logs.
 
 ## Done
 Stop the server, put the devices back the way they were.

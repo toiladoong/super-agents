@@ -54,6 +54,10 @@ test('reads the person’s answer', async () => {
   expect(typedReviewCommand('/super-agents:audit here')).toEqual({ skill: 'super-agents:audit', args: ' here' })
   expect(isReviewSkill('ponytail:ponytail-audit')).toBe(false)
   expect(movesOn('/super-agents:audit')).toBe(false)
+  expect(afterReviewCommand(off, 'super-agents:debug', 'here SG-2 crash')).toEqual({ isActive: true, isTurnAllowed: false })
+  expect(afterReviewCommand(off, 'super-agents:dev', 'debug here crash')).toEqual({ isActive: true, isTurnAllowed: false })
+  expect(typedReviewCommand('/super-agents:debug here x')).toEqual({ skill: 'super-agents:debug', args: ' here x' })
+  expect(isReviewSkill('ponytail:ponytail-debug')).toBe(false)
   // The audit report is written before the person answers; every other edit waits.
   expect(isLockedEdit('Write', { file_path: 'E:\\repo\\.agents\\audits\\2026-11-22-repo.md' })).toBe(false)
   expect(isLockedEdit('Write', { file_path: '/repo/.agents/audits/x.md' })).toBe(false)
@@ -64,6 +68,8 @@ test('reads the person’s answer', async () => {
   expect(isLockedEdit('Write', { file_path: '.agents/audits/../../src/a.ts' })).toBe(true)
   expect(isLockedEdit('Write', { file_path: 'E:\\repo\\.agents\\audits\\..\\..\\src\\a.ts' })).toBe(true)
   expect(isLockedEdit('Write', { file_path: '.agents/audits/2026..notes.md' })).toBe(false)
+  expect(isLockedEdit('Write', { file_path: '.agents/debug/repro.sh' })).toBe(false)
+  expect(isLockedEdit('Write', { file_path: '.agents/plans/x.md' })).toBe(true)
 })
 
 test('edits wait for "sửa …" during review --here, one turn at a time', async ($, on) => {

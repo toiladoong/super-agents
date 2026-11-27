@@ -14,14 +14,14 @@ const OFF: ReviewGuard = { isActive: false, isTurnAllowed: false }
 
 export const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit'])
 
-// The edits the lock holds back: every file edit except the audit report (`.agents/audits/…`), which `audit here`
-// writes before asking what to fix.
+// The edits the lock holds back: every file edit except the audit report (`.agents/audits/…`) and the debug scratch
+// (`.agents/debug/…`: reproduction scripts), which `audit here` / `debug here` write before asking what to fix.
 export function isLockedEdit(tool: string, input: unknown): boolean {
   if (!EDIT_TOOLS.has(tool)) return false
   const fields = (input ?? {}) as { file_path?: unknown; notebook_path?: unknown }
   const path = String(fields.file_path ?? fields.notebook_path ?? '')
   // A '..' step could climb out of the folder ('.agents/audits/../../src/a.ts'): such a path stays locked.
-  return !/(^|[\\/])\.agents[\\/]audits[\\/]/.test(path) || /(^|[\\/])\.\.([\\/]|$)/.test(path)
+  return !/(^|[\\/])\.agents[\\/](audits|debug)[\\/]/.test(path) || /(^|[\\/])\.\.([\\/]|$)/.test(path)
 }
 
 // The skill tells Claude to end the review's final summary with one of these lines; the guard turns off when it sees it.
@@ -37,9 +37,9 @@ export function guardStatus(state: ReviewGuard, lang: Lang = 'vi'): string | und
   return state.isTurnAllowed ? TEXT[lang].guardOpen : TEXT[lang].guardLocked
 }
 
-// The review skill and its audit twin (`/super-agents:audit` asks before fixing the same way).
+// The review skill and its audit / debug twins (they ask before fixing the same way).
 export function isReviewSkill(skill: string): boolean {
-  return /(^|:)(review|audit)$/.test(skill)
+  return /(^|:)(review|audit|debug)$/.test(skill)
 }
 
 // Only the start of the answer decides: "sửa 1, bỏ qua 3" fixes 1, "lỗi 2 sửa thế nào?" is a question, not a go-ahead.
@@ -68,7 +68,7 @@ export function finishesReview(answer: string): boolean {
 // `--off` ends it. Hooks on skill.prompt are bypassed for plugins, so the call is caught at the tool and the prompt.
 export function afterReviewCommand(state: ReviewGuard, skill: string, args: string): ReviewGuard {
   // `/super-agents:dev review here …`, and `dev audit here …` (it also asks before fixing), lock like `/review here …`.
-  const devReview = /(^|:)dev$/.test(skill) ? /^\s*(?:review|audit)(?=\s|$)([\s\S]*)$/.exec(args) : null
+  const devReview = /(^|:)dev$/.test(skill) ? /^\s*(?:review|audit|debug)(?=\s|$)([\s\S]*)$/.exec(args) : null
   if (devReview) return afterReviewCommand(state, 'review', devReview[1] ?? '')
   if (!isReviewSkill(skill)) return state
   const mode = reviewMode(args)
@@ -87,11 +87,11 @@ export function reviewMode(args: string): 'here' | 'off' | null {
 
 // A typed "/super-agents:review …", "/review …" or "/super-agents:dev review | audit …": the skill and its arguments, else null.
 export function typedReviewCommand(text: string): { skill: string; args: string } | null {
-  const match = /^\s*\/([\w-]+:)?(review|audit|dev)(?=\s|$)([\s\S]*)$/.exec(text)
+  const match = /^\s*\/([\w-]+:)?(review|audit|debug|dev)(?=\s|$)([\s\S]*)$/.exec(text)
   if (!match) return null
   const skill = `${match[1] ?? ''}${match[2]}`
   const args = match[3] ?? ''
-  return match[2] === 'dev' && !/^\s*(?:review|audit)(?=\s|$)/.test(args) ? null : { skill, args }
+  return match[2] === 'dev' && !/^\s*(?:review|audit|debug)(?=\s|$)/.test(args) ? null : { skill, args }
 }
 
 // The guard after the person's prompt: "sửa …" opens this turn, a decline / another command / "xong review" ends it,

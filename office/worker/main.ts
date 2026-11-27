@@ -85,6 +85,8 @@ async function agentsSnapshot() {
       key: agent.paneKey,
       parentKey: agent.parentPaneKey ?? null,
       title: agent.displayName || agent.taskTitle || agent.conversationName || '',
+      // The chat's own name keeps the role when a reused worker gets a task titled without it.
+      chatName: agent.conversationName ?? '',
       agent: agent.agentType || 'agent',
       state: agent.state,
       stateStartedAt: agent.stateStartedAt ?? Date.now(),

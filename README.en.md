@@ -42,6 +42,16 @@ asks you to approve again.
   If `~/.agents/skills/dev` is a junction to an old clone, remove it so Codex does not load the skill twice.
 - **Orca's orchestration skill:** `orca skills install --skill orchestration`.
 
+## Code graph (graphify, optional)
+Without [graphify](https://github.com/Graphify-Labs/graphify), the first run's orchestrator (or `/super-agents:setup`) asks
+once and, on a yes, installs it (`uv tool install graphifyy`, installing `uv` first if needed) and builds the repo's graph;
+`"codeGraph": false` in `.agents/team.json` stops the question. With graphify on the machine, the roles use the
+code's call / import graph instead of grep: the reviewer finds what a change touches (`graphify affected`), researchers
+ask how parts connect (`query` / `path` / `explain`), the orchestrator checks dependencies between parts, audit splits by
+subsystem, debug traces a bug's route. The orchestrator refreshes the graph before handing out work (`graphify update .`);
+with none yet it asks you to build one with `graphify extract . --code-only` (parsed locally, nothing sent out). The
+graph is a lead, always confirmed by reading the code. Without graphify everything runs as before.
+
 ## Language
 Replies, plans and reports follow `"language": "vi" | "en"` in the repo's `.agents/team.json` (default `vi`; also
 selectable in the Team editor). The `/office` pane, the Orca panel and the Team editor follow it too (the panel takes
@@ -52,14 +62,16 @@ in both languages (e.g. "sửa 1, 3" / "fix 1, 3", "không sửa" / "skip").
 | Command (Claude Code) | What it does |
 |---|---|
 | `/super-agents:dev <ticket> [--research]` | Opens an orchestrator tab: (research, when `--research` is given or the ticket is unclear) → plan → you approve → code → review → test → acceptance → you approve |
-| `/super-agents:dev research <question>` | Research only, no code |
+| `/super-agents:research [here] <question>` | Research only, no code (shortcut for `/super-agents:dev research`) |
+| `/super-agents:research [here] idea <idea>` | Is the idea worth investing in / pursuing: 3 researchers gather evidence (need / value, cost / feasibility, alternatives), a skeptic challenges it; verdict **Pursue / Start small / Wait for evidence / Drop** with confidence, an evidence table (source, strong / medium / weak) and the cheapest next step to settle what is unsure. Saved to `.agents/research/<date>-<name>.md`, no code |
 | `/super-agents:dev review <ticket> [branch]` | Already-written code: review → fix → test |
 | `/super-agents:dev plan [here] <ticket>` | Plan only (research if needed) → you approve → saved to `.agents/plans/<ticket>.md`, no code yet. Then `/super-agents:dev <ticket>` follows this file |
 | `/super-agents:review [ticket] [branch]` | Shortcut for the row above: review only (no arguments = uncommitted changes) |
 | `/super-agents:review here [ticket]` | Compact review in the current tab with a Claude subagent, no Orca tab / worker opened. **File edits are locked** (status bar 🔒) until you answer "sửa 1, 3" / "fix 1, 3" or "sửa hết lỗi chặn" / "fix all blocking"; unlocked for exactly that turn, then locked again |
 | `/super-agents:review off` | Turn the lock off manually (or say "xong review" / "done review"). Usually not needed: the lock turns off by itself when the review is done (the `✅ Review xong` / `✅ Review done` line), when you answer "không sửa" / "skip" or "bỏ qua" / "ignore", or when you type another `/…` command |
-| `env <name\|url>` (added to `dev` / `review`) | The tester tests a real environment (e.g. a staging / production web domain) instead of a local build. Names come from `environments` in `.agents/team.json`: `{ "staging": "https://…" }`. The tester first checks the environment runs the build under test; test accounts only, no payments / deleting / changing real data, production is look-only |
+| `env <name\|url>` (added to `dev` / `review`) | The tester tests a real environment (e.g. a staging / production web domain) instead of a local build. Set the domains in ⚙ Team → **Test environments (env)** of the Agent Office panel (written to `environments` in `.agents/team.json`: `{ "develop": "https://…", "staging": "https://…", "production": "https://…" }`), each environment's test accounts in the rules (`notes`); call it with `env develop`, e.g. `/super-agents:review <ticket> env develop`. The tester first checks the environment runs the build under test; test accounts only, no payments / deleting / changing real data, production is look-only |
 | `/super-agents:audit [here] [folder …]` | Quality audit of the whole repo (or folders): bugs, security, what breaks under load, risky code without tests, slow paths, what to delete / merge / split. Up to 3 reviewers split it (Claude with ponytail runs `/ponytail:ponytail-audit` first), a skeptic checks the blocking ones; the report goes to `.agents/audits/<date>-<name>.md` and asks what to fix, fixing nothing itself. Shortcut for `/super-agents:dev audit`; `here` runs in this tab and locks the edit tools like `review here` |
+| `/super-agents:debug [here] <bug / ticket>` | Methodical bug fixing: reproduce + collect logs → up to 3 hypotheses, one researcher each → the root cause (`file:line`, evidence) → **you approve** → the coder writes a failing test first, then fixes → review, test. Three fixes that do not hold → stop and ask. `here` locks the edit tools until you answer "fix …" |
 | `/super-agents:dev status` | Table of workers busy / idle / waiting |
 | `/super-agents:setup` | Installs what this machine still lacks (the Agent Office panel in Orca, the orchestration skill, the Codex plugin), asking before each step |
 

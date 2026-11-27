@@ -41,6 +41,16 @@ thì Orca hỏi duyệt lại.
   Máy đã tạo junction `~/.agents/skills/dev` tới bản clone cũ thì xoá junction đó để Codex không nạp skill hai lần.
 - **Skill orchestration của Orca:** `orca skills install --skill orchestration`.
 
+## Đồ thị code (graphify, tuỳ chọn)
+Máy chưa có [graphify](https://github.com/Graphify-Labs/graphify) thì lần chạy đầu orchestrator (hoặc `/super-agents:setup`)
+hỏi bạn một câu, đồng ý là tự cài (`uv tool install graphifyy`, cài `uv` trước nếu thiếu) và dựng đồ thị cho repo; không
+muốn bị hỏi nữa thì đặt `"codeGraph": false` trong `.agents/team.json`. Có graphify thì các vai dùng đồ thị gọi /
+import của code thay cho grep: reviewer tìm nơi bị ảnh hưởng (`graphify affected`), researcher hỏi cách các phần nối nhau
+(`query` / `path` / `explain`), orchestrator xét phụ thuộc giữa các phần, audit chia theo hệ thống con, debug lần đường đi
+của lỗi. Orchestrator cập nhật đồ thị trước khi giao việc (`graphify update .`); chưa có thì hỏi bạn dựng bằng
+`graphify extract . --code-only` (phân tích tại máy, không gửi gì ra ngoài). Kết quả đồ thị chỉ là gợi ý, luôn được đọc lại
+code để xác nhận. Không có graphify thì mọi thứ vẫn chạy như cũ.
+
 ## Ngôn ngữ
 Mặc định **tiếng Việt**. Đặt `"language": "en"` trong `.agents/team.json` của repo (hoặc chọn trong editor Team) để AI
 trả lời, viết kế hoạch và báo cáo bằng tiếng Anh; pane `/office`, panel Agent Office và editor Team của
@@ -52,14 +62,16 @@ tiếng Anh đều được hiểu ("sửa 1, 3" / "fix 1, 3", "không sửa" / 
 | Lệnh (Claude Code) | Làm gì |
 |---|---|
 | `/super-agents:dev <ticket> [--research]` | Mở tab orchestrator: (research, khi có `--research` hoặc ticket chưa rõ) → kế hoạch → bạn duyệt → code → review → test → nghiệm thu → bạn duyệt |
-| `/super-agents:dev research <câu hỏi>` | Chỉ tìm hiểu, không code |
+| `/super-agents:research [here] <câu hỏi>` | Chỉ tìm hiểu, không code (lối tắt của `/super-agents:dev research`) |
+| `/super-agents:research [here] idea <ý tưởng>` | Đánh giá ý tưởng có đáng đầu tư / theo đuổi: 3 researcher thu thập bằng chứng (nhu cầu / giá trị, chi phí / khả thi, phương án khác), skeptic phản biện; kết luận **Theo đuổi / Làm bản nhỏ trước / Chờ thêm bằng chứng / Bỏ** kèm độ tin cậy, bảng bằng chứng (nguồn, mạnh / vừa / yếu) và bước rẻ nhất để làm rõ điều chưa chắc. Lưu `.agents/research/<ngày>-<tên>.md`, không code |
 | `/super-agents:dev review <ticket> [nhánh]` | Code đã viết sẵn: review → sửa → test |
 | `/super-agents:dev plan [here] <ticket>` | Chỉ lập kế hoạch (research nếu cần) → bạn duyệt → lưu `.agents/plans/<ticket>.md`, chưa code. Sau đó `/super-agents:dev <ticket>` làm theo file này |
 | `/super-agents:review [ticket] [nhánh]` | Lối tắt của dòng trên: chỉ review (không tham số = thay đổi chưa commit) |
 | `/super-agents:review here [ticket]` | Review gọn trong tab đang mở bằng subagent Claude, không mở tab / worker Orca. **Khoá sửa file** (thanh trạng thái 🔒) tới khi bạn trả lời "sửa 1, 3" / "sửa hết lỗi chặn"; mở đúng lượt đó rồi khoá lại |
 | `/super-agents:review off` | Tắt khoá bằng tay (hoặc nói "xong review"). Thường không cần: khoá tự tắt khi review xong (dòng `✅ Review xong`), khi bạn trả lời "không sửa" / "bỏ qua", hoặc khi bạn gõ lệnh `/…` khác |
-| `env <tên\|url>` (thêm vào `dev` / `review`) | Tester test trên môi trường thật (vd. domain web staging / production) thay vì bản chạy local. Tên lấy từ `environments` trong `.agents/team.json`: `{ "staging": "https://…" }`. Tester kiểm tra môi trường đã có bản cần test chưa; chỉ dùng tài khoản test, không thanh toán / xoá / sửa dữ liệu thật, production chỉ xem |
+| `env <tên\|url>` (thêm vào `dev` / `review`) | Tester test trên môi trường thật (vd. domain web staging / production) thay vì bản chạy local. Khai báo domain trong ⚙ Team → **Môi trường test (env)** của panel Agent Office (ghi vào `environments` của `.agents/team.json`: `{ "develop": "https://…", "staging": "https://…", "production": "https://…" }`), tài khoản test của từng môi trường ghi ở phần luật (`notes`); gọi bằng `env develop`, vd `/super-agents:review <ticket> env develop`. Tester kiểm tra môi trường đã có bản cần test chưa; chỉ dùng tài khoản test, không thanh toán / xoá / sửa dữ liệu thật, production chỉ xem |
 | `/super-agents:audit [here] [thư mục …]` | Rà chất lượng cả repo (hoặc các thư mục): lỗi, bảo mật, chỗ hỏng khi tải lớn, code rủi ro thiếu test, chỗ chậm, code nên xoá / gộp / tách. Tối đa 3 reviewer chia phần (Claude có ponytail chạy `/ponytail:ponytail-audit` trước), skeptic phản biện lỗi chặn; báo cáo lưu `.agents/audits/<ngày>-<tên>.md`, hỏi sửa mục nào, không tự sửa. Lối tắt của `/super-agents:dev audit`; `here` chạy gọn trong tab, khoá sửa file như `review here` |
+| `/super-agents:debug [here] <lỗi / ticket>` | Sửa lỗi có phương pháp: tái hiện + thu log → tối đa 3 giả thuyết, mỗi researcher kiểm một → báo nguyên nhân gốc (`file:line`, bằng chứng) → **bạn duyệt** → coder viết test đỏ trước rồi sửa → review, test. Sửa 3 lần không được thì dừng hỏi. `here` khoá sửa file tới khi bạn trả lời "sửa …" |
 | `/super-agents:dev status` | Bảng worker đang làm / rảnh / chờ |
 | `/super-agents:setup` | Cài nốt phần máy này còn thiếu (panel Agent Office trong Orca, skill orchestration, bản cho Codex), hỏi trước từng bước |
 

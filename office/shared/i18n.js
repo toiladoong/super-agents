@@ -18,6 +18,14 @@
       notesHint: 'Orchestrator đọc và chép phần liên quan vào việc giao cho từng worker.',
       languageTitle: 'Ngôn ngữ trả lời',
       languageHint: 'AI trả lời, viết kế hoạch và báo cáo bằng ngôn ngữ này.',
+      environmentsTitle: 'Môi trường test (env)',
+      environmentsHint: 'Domain đã triển khai để tester test bằng "env <tên>" (vd /super-agents:review <ticket> env develop). Tài khoản test và giới hạn của từng môi trường ghi ở phần luật bên dưới.',
+      environmentName: 'develop / staging / production',
+      addEnvironment: '+ Thêm môi trường',
+      environmentNameRefused: (name) => `Không đổi tên thành "${name}": tên phải là một từ (chữ, số, - hoặc _) và chưa có ở dòng khác.`,
+      agentChanged: (role, before, after) => `Đã đổi AI của ${role}: ${before} → ${after} (model cũ đã xoá).`,
+      undo: 'Hoàn tác',
+      removeEnvironment: 'Xoá môi trường này',
       addNote: '+ Thêm luật',
       removeNote: 'Xoá luật này',
       modelPlaceholder: 'tên model',
@@ -64,6 +72,14 @@
       notesHint: 'The orchestrator reads them and copies the relevant ones into each worker\'s task.',
       languageTitle: 'Reply language',
       languageHint: 'The AI replies, writes plans and reports in this language.',
+      environmentsTitle: 'Test environments (env)',
+      environmentsHint: 'Deployed domains the tester tests with "env <name>" (e.g. /super-agents:review <ticket> env develop). Put each environment\'s test accounts and limits in the rules below.',
+      environmentName: 'develop / staging / production',
+      addEnvironment: '+ Add environment',
+      environmentNameRefused: (name) => `Not renamed to "${name}": a name is one word (letters, digits, - or _) not used by another row.`,
+      agentChanged: (role, before, after) => `Changed the AI of ${role}: ${before} → ${after} (its model was dropped).`,
+      undo: 'Undo',
+      removeEnvironment: 'Remove this environment',
       addNote: '+ Add rule',
       removeNote: 'Remove this rule',
       modelPlaceholder: 'model name',
@@ -116,8 +132,10 @@
         <li><code>/super-agents:dev plan &lt;ticket&gt;</code> chỉ lập kế hoạch rồi dừng, lưu <code>.agents/plans/&lt;ticket&gt;.md</code>; chạy <code>/super-agents:dev &lt;ticket&gt;</code> sau để làm theo (thêm <code>here</code> để lập ngay trong tab)</li>
         <li><code>/super-agents:review [ticket] [nhánh]</code> chỉ review code đã viết; ticket làm tiêu chí nghiệm thu, không ghi nhánh = thay đổi chưa commit</li>
         <li><code>/super-agents:review here [ticket]</code> review gọn trong tab đang mở, không mở tab / worker mới; hỏi bạn chọn lỗi trước khi sửa</li>
-        <li>Thêm <code>env &lt;tên|url&gt;</code> để tester test trên môi trường thật (tên lấy từ <code>environments</code> trong <code>team.json</code>)</li>
+        <li><b>Test trên môi trường đã triển khai:</b> khai báo domain trong <b>⚙ Team</b> → <b>Môi trường test (env)</b> (develop / staging / production), tài khoản test ghi ở phần luật; rồi thêm <code>env &lt;tên&gt;</code> vào lệnh, vd <code>/super-agents:review &lt;ticket&gt; env develop</code>. Tester mở domain đó thay vì chạy local, kiểm tra bản đã deploy có thay đổi chưa, chỉ dùng tài khoản test; production chỉ xem</li>
         <li><code>/super-agents:audit [here] [thư mục]</code> rà cả repo (hoặc thư mục) tìm lỗi, chỗ chậm, code thừa (dùng ponytail-audit); báo bảng đánh số, không sửa gì</li>
+        <li><code>/super-agents:research [here] idea &lt;ý tưởng&gt;</code> thu thập bằng chứng (nhu cầu, chi phí, phương án khác, có phản biện) rồi kết luận có nên theo đuổi; bỏ <code>idea</code> để hỏi một câu thường</li>
+        <li><code>/super-agents:debug [here] &lt;lỗi&gt;</code> tìm nguyên nhân gốc (tái hiện, giả thuyết, bằng chứng) rồi mới sửa, test trước</li>
         <li><code>/super-agents:dev status</code> xem worker nào đang làm / rảnh</li>
         <li><code>/super-agents:setup</code> cài nốt phần máy này còn thiếu: panel này, skill orchestration, bản cho Codex</li>
         <li>Ngôn ngữ của panel theo <code>"language"</code> trong <code>team.json</code> của workspace đang mở (chọn trong <b>⚙ Team</b>); workspace chưa đặt thì theo Orca Settings → plugin Agent Office → <b>Ngôn ngữ</b>.</li>
@@ -141,8 +159,10 @@
         <li><code>/super-agents:dev plan &lt;ticket&gt;</code> only plans and stops, saving <code>.agents/plans/&lt;ticket&gt;.md</code>; run <code>/super-agents:dev &lt;ticket&gt;</code> later to follow it (add <code>here</code> to plan right in the tab)</li>
         <li><code>/super-agents:review [ticket] [branch]</code> only reviews written code; the ticket gives the acceptance criteria, no branch = uncommitted changes</li>
         <li><code>/super-agents:review here [ticket]</code> reviews right in the open tab, no new tab / worker; asks you which findings to fix first</li>
-        <li>Add <code>env &lt;name|url&gt;</code> so the tester tests a real environment (names from <code>environments</code> in <code>team.json</code>)</li>
+        <li><b>Test on a deployed environment:</b> set the domains in <b>⚙ Team</b> → <b>Test environments (env)</b> (develop / staging / production), test accounts in the rules; then add <code>env &lt;name&gt;</code> to the command, e.g. <code>/super-agents:review &lt;ticket&gt; env develop</code>. The tester opens that domain instead of a local build, checks the deployed build has the change, uses test accounts only; production is look-only</li>
         <li><code>/super-agents:audit [here] [folder]</code> audits the whole repo (or folders) for bugs, slow paths, dead code (with ponytail-audit); a numbered report, fixes nothing</li>
+        <li><code>/super-agents:research [here] idea &lt;idea&gt;</code> gathers evidence (need, cost, alternatives, challenged by a skeptic) and says whether it is worth pursuing; without <code>idea</code>, answers a question</li>
+        <li><code>/super-agents:debug [here] &lt;bug&gt;</code> finds the root cause (reproduce, hypotheses, evidence) before a test-first fix</li>
         <li><code>/super-agents:dev status</code> shows which workers are busy / free</li>
         <li><code>/super-agents:setup</code> installs what this machine still lacks: this panel, the orchestration skill, the Codex plugin</li>
         <li>The panel follows <code>"language"</code> in the focused workspace's <code>team.json</code> (pick it in <b>⚙ Team</b>); a workspace without one follows Orca Settings → Agent Office plugin → <b>Language</b>.</li>

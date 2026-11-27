@@ -1,9 +1,39 @@
 # Secondary modes of /dev
 
-## Research only: `/dev research <question or ticket>`
+## Research only: `/dev research [here] [idea] <question, ticket or idea>`
 Run only step 0, no code. The orchestrator splits the questions, assigns researchers, then gives the user one merged
 report: answers, evidence (`file:line`, links), the options and the recommended option, what is still uncertain. If the
 user wants to continue → run the full flow from step 1 with this result.
+- `here`: the same in this tab with researcher subagents (`description` `researcher · <question>`; the skeptic
+  `skeptic · idea <name>`), using subagents as in "In one tab" but without its spec approval, fix step or closing
+  line: research changes no code.
+
+### Is the idea worth it: `/dev research [here] idea <idea>`
+Also when the user asks whether something is worth doing ("có nên…", "should we…", "đáng làm không"). The goal is a
+decision backed by evidence, not a plan. Nothing is coded.
+- **Frame it** (the orchestrator, before any worker): restate the idea in 1–2 sentences, who it is for, and what
+  "worth it" means here (the gain the user expects, the budget / time they would spend). Unclear → ask the user first.
+- **Three researchers in parallel** (task titles `researcher · idea <lens>`), each per the "Evaluating an idea" section
+  of `roles/researcher.md`, one lens each:
+  1. **Need / value** — is the problem real and how big: who hits it, how often, what it costs them now (repo issues /
+     TODOs / tickets, usage in the code, the user's words, the web: demand, how others solve it).
+  2. **Cost / feasibility** — what it touches in this repo, size (S / M / L with reasons), dependencies, risks, the
+     upkeep after, and the smallest version that would still prove the value.
+  3. **Alternatives** — doing nothing, a smaller version, an existing tool / library / product / setting that already
+     does it, and what each costs.
+- **Skeptic** (one more researcher, after the three report; task title `skeptic · idea <name>`): argue against the
+  case — attack the strongest claims and the numbers, look for counter-evidence. Label each claim `STANDS` / `WEAK` /
+  `UNSUPPORTED`.
+- **Report** to the user, saved to `.agents/research/<YYYY-MM-DD>-<name>.md` (not committed until the user says so):
+  1. **Verdict:** `Theo đuổi` / `Làm bản nhỏ trước` / `Chờ thêm bằng chứng` / `Bỏ` (English: Pursue / Start small /
+     Wait for evidence / Drop), with confidence (high / medium / low) and the 2–3 facts it rests on.
+  2. **Evidence table:** claim · for or against · source (`file:line`, link + date read, ticket, command output) ·
+     strength (strong: measured or primary source; medium: credible second-hand; weak: opinion or guess) · skeptic label.
+  3. **Value vs cost** in a few lines; the biggest risks; what is still unknown.
+  4. **Cheapest next step** that settles the biggest unknown (a spike, a prototype, asking users, a measurement), with
+     what result would mean go / stop.
+  No evidence for a point → write "chưa rõ" / "unknown"; never invent numbers, users or market sizes.
+- **Next:** the user decides. To go ahead → `/dev plan <idea>` with this report as input.
 
 ## Plan only: `/dev plan [here] [--research] <ticket or description>`
 Run step 0 (if needed) and step 1 then **stop**: create no coder / reviewer / tester workers, edit no code.
@@ -34,12 +64,38 @@ Skip the Code step, start from Review on the written code.
 - **Test, acceptance:** as in steps 4, 5. For code in `current`, a dev server already running from this checkout can be
   used as is.
 
+## Debug a bug: `/dev debug [here] <bug, ticket or error>`
+Find the root cause before any fix; a fix without a known cause is a guess.
+1. **Reproduce and collect:** the exact steps, the error / stack, the runtime logs (the repo's rules may require them
+   before any assumption), when it started (`git log` / `git bisect` on the suspect range), what changed. Can't
+   reproduce → say what is missing and ask the user; don't fix blind. Reproducing needs the dev server, a device or a
+   real environment (resources only the tester uses, per the repo's `notes`) → hand this step to one `tester` worker
+   (task title `tester · debug repro`): the steps, logs, screenshots; the researchers work from that and ask the tester
+   to run it again when a hypothesis needs it.
+2. **Hypotheses:** list the likely causes (at most 3), each with what would prove or rule it out (with the code graph,
+   `graphify path "<entry point>" "<failing piece>"` shows the route the bug can take). One `researcher`
+   worker per hypothesis on `--worktree current` (read-only, task title `researcher · debug <hypothesis>`): read the
+   code path, compare with similar code that works, run the reproduction. Each reports proven / ruled out with
+   evidence.
+   **Until the user approves the fix, no project file is edited** (the user's uncommitted work lives in this
+   checkout): reproduction scripts, temporary logging wrappers and their output go only in `.agents/debug/` (the
+   `here` lock lets that folder through), and are deleted when the run ends.
+3. **Root cause report:** the cause (`file:line`), the evidence, why the other hypotheses are ruled out, and the
+   proposed fix (the smallest at the root, not a patch over the symptom). **Ask the user to approve** before fixing.
+4. **Fix:** a `coder` writes a test that fails on the bug first, then fixes the cause, with evidence (the test red
+   before, green after); then review and test as in steps 3–4 of the flow. Three fixes that did not hold → stop: the
+   cause or the design is wrong, report and ask the user instead of trying a fourth.
+- **`here`:** the same in this tab with subagents per "In one tab"; the plugin's mod locks the edit tools for
+  `debug here` until the user answers "sửa …" / "fix …" to the root cause report, and the run closes with
+  `✅ Review xong` / `✅ Review done`.
+
 ## Audit the repo: `/dev audit [here] [path …]`
 A read-only health check of the code as it is (no diff): bugs, security holes, what breaks under real load, risky code
 without tests, slow paths, and what to delete / merge / split. **Fix nothing in this mode.**
 - **Scope:** the given paths, else the whole repo, skipping generated / vendored files (`node_modules`, `dist`,
   `build`, lockfiles). Name the run after the scope (`audit-<paths or repo>`, per the "Ticket" naming rule).
-- **Split:** count the tracked files per top-level folder (`git ls-files`), then group the folders into at most 3 parts
+- **Split:** with the code graph, split along its subsystems (`graphify-out/GRAPH_REPORT.md`), they keep code that calls
+  each other together; otherwise count the tracked files per top-level folder (`git ls-files`), then group the folders into at most 3 parts
   of similar size, keeping the shared code (per `notes`) with its main users. Under ~200 files → one part. A part still
   over ~300 files is split again by its subfolders; if that needs more than 3 parts, stop and ask the user to narrow the
   scope (e.g. `/dev audit webApp/`) or to run the groups one after another — never give one reviewer a part it cannot

@@ -25,7 +25,11 @@ they write in another one). End with a short table: item, state (already there /
    `super-agents` → there; otherwise `codex plugin marketplace add toiladoong/super-agents` then
    `codex plugin add super-agents@super-agents`. If `~/.agents/skills/dev` is a junction / link to an old clone of this
    repo, offer to remove that link so Codex does not load the skill twice.
-5. **Repo config** (optional): in the current repo, `.agents/team.json` missing → say that the **⚙ Team** button of
+5. **Code graph** (optional): `graphify --version` works → there. Otherwise ask, and on a yes install it exactly as the
+   "Install on confirm" steps of the "Code graph" section in `../dev/SKILL.md` (uv / pipx, installing uv first if
+   needed), then offer to build the current repo's graph (`graphify extract . --code-only`). It speeds up "who uses this
+   / what does this touch" questions; nothing breaks without it.
+6. **Repo config** (optional): in the current repo, `.agents/team.json` missing → say that the **⚙ Team** button of
    the Agent Office panel creates it from the defaults; do not create it yourself unless asked.
 
 Run nothing else; never `--approve` an Orca plugin for the user — the approval is theirs, in Orca's own dialog.

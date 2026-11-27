@@ -17,8 +17,10 @@ export const OFFICE_HELP: Record<Lang, string> = {
 - **\`/super-agents:dev plan <ticket>\`** chỉ lập kế hoạch rồi dừng, lưu **\`.agents/plans/<ticket>.md\`**; chạy **\`/super-agents:dev <ticket>\`** sau để làm theo
 - **\`/super-agents:review [ticket] [nhánh]\`** chỉ review code đã viết; ticket làm tiêu chí nghiệm thu, không ghi nhánh = thay đổi chưa commit
 - **\`/super-agents:review here [ticket]\`** review gọn trong tab này bằng subagent, không mở tab / worker mới; hỏi bạn chọn lỗi trước khi sửa
-- Thêm **\`env <tên|url>\`** để tester test trên môi trường thật (tên lấy từ \`environments\` trong team.json)
+- **Test trên môi trường đã triển khai:** khai báo domain trong ⚙ Team → **Môi trường test (env)** (develop / staging / production), tài khoản test ghi ở phần luật; rồi thêm **\`env <tên>\`** vào lệnh, vd **\`/super-agents:review <ticket> env develop\`**. Tester mở domain đó thay vì chạy local, kiểm tra bản đã deploy có thay đổi chưa, chỉ dùng tài khoản test; production chỉ xem
 - **\`/super-agents:audit [here] [thư mục]\`** rà cả repo (hoặc thư mục) tìm lỗi, chỗ chậm, code thừa (dùng ponytail-audit); báo bảng đánh số, không sửa gì
+- **\`/super-agents:research [here] idea <ý tưởng>\`** thu thập bằng chứng (nhu cầu, chi phí, phương án khác, có phản biện) rồi kết luận có nên theo đuổi; bỏ \`idea\` để hỏi một câu thường
+- **\`/super-agents:debug [here] <lỗi>\`** tìm nguyên nhân gốc (tái hiện, giả thuyết, bằng chứng) rồi mới sửa, test trước
 - **\`/super-agents:dev status\`** xem worker nào đang làm / rảnh
 - **\`/super-agents:setup\`** cài nốt phần máy này còn thiếu: panel Orca, skill orchestration, bản cho Codex
 - Đóng pane là dừng cập nhật; **\`/office\`** mở lại.
@@ -38,8 +40,10 @@ export const OFFICE_HELP: Record<Lang, string> = {
 - **\`/super-agents:dev plan <ticket>\`** only plans and stops, saving **\`.agents/plans/<ticket>.md\`**; run **\`/super-agents:dev <ticket>\`** later to follow it
 - **\`/super-agents:review [ticket] [branch]\`** only reviews written code; the ticket gives the acceptance criteria, no branch = uncommitted changes
 - **\`/super-agents:review here [ticket]\`** reviews right in this tab with subagents, no new tab / worker; asks you which findings to fix first
-- Add **\`env <name|url>\`** so the tester tests a real environment (names from \`environments\` in team.json)
+- **Test on a deployed environment:** set the domains in ⚙ Team → **Test environments (env)** (develop / staging / production), test accounts in the rules; then add **\`env <name>\`** to the command, e.g. **\`/super-agents:review <ticket> env develop\`**. The tester opens that domain instead of a local build, checks the deployed build has the change, uses test accounts only; production is look-only
 - **\`/super-agents:audit [here] [folder]\`** audits the whole repo (or folders) for bugs, slow paths, dead code (with ponytail-audit); a numbered report, fixes nothing
+- **\`/super-agents:research [here] idea <idea>\`** gathers evidence (need, cost, alternatives, challenged by a skeptic) and says whether it is worth pursuing; without \`idea\`, answers a question
+- **\`/super-agents:debug [here] <bug>\`** finds the root cause (reproduce, hypotheses, evidence) before a test-first fix
 - **\`/super-agents:dev status\`** shows which workers are busy / free
 - **\`/super-agents:setup\`** installs what this machine still lacks: the Orca panel, the orchestration skill, the Codex plugin
 - Closing the pane stops the updates; **\`/office\`** opens it again.

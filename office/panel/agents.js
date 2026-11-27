@@ -38,10 +38,13 @@
       const parents = new Set(snapshot.agents.map((agent) => agent.parentKey).filter(Boolean))
       agents = snapshot.agents
         .map((agent) => {
-          const role = roleOf(agent.title)
+          // The task title first; a worker reused for a task titled without its role still has it in its chat name.
+          const titleRole = roleOf(agent.title)
+          const role = titleRole === 'agent' ? roleOf(agent.chatName) : titleRole
           return { ...agent, role: role === 'agent' && parents.has(agent.key) ? 'orchestrator' : role }
         })
-        .sort((a, b) => a.key.localeCompare(b.key))
+        // Orchestrators take the first desks, the rest keep a stable order.
+        .sort((a, b) => (b.role === 'orchestrator') - (a.role === 'orchestrator') || a.key.localeCompare(b.key))
       notify()
     } finally {
       isRefreshing = false

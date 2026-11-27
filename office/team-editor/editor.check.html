@@ -6,7 +6,11 @@
     <div id="error"></div>
     <h2 id="language-title"></h2><p id="language-hint"></p><div id="language"></div>
     <h2 id="roles-title"></h2><p id="roles-hint"></p>
+    <div id="change" hidden></div>
     <div id="roles"></div>
+    <h2 id="environments-title"></h2><p id="environments-hint"></p>
+    <div id="environments"></div>
+    <button id="add-environment"></button>
     <h2 id="notes-title"></h2><p id="notes-hint"></p>
     <div id="notes"></div>
     <button id="add-note"></button>
@@ -75,6 +79,51 @@
         document.querySelector('.note button').click()
         check(JSON.stringify(JSON.parse(written).notes) === '[""]', 'a note can be removed')
         check(written.endsWith('}\n') && written.includes('\n  "roles"'), 'file is written as 2-space JSON')
+
+        // Test environments: added as develop, staging, production in turn; renamed and re-pointed in place; removed.
+        const addEnvironment = () => document.getElementById('add-environment').click()
+        addEnvironment()
+        addEnvironment()
+        check(Object.keys(JSON.parse(written).environments).join() === 'develop,staging', 'environments are added with the usual names')
+        const rows = () => document.querySelectorAll('.environment')
+        const [nameInput, urlInput] = rows()[0].querySelectorAll('input')
+        urlInput.value = 'https://develop-web.example.vn'
+        urlInput.dispatchEvent(new Event('change'))
+        nameInput.value = 'dev'
+        nameInput.dispatchEvent(new Event('change'))
+        check(JSON.stringify(JSON.parse(written).environments) === '{"dev":"https://develop-web.example.vn","staging":""}', 'a rename keeps the URL and the order')
+        rows()[1].querySelector('button').click()
+        check(Object.keys(JSON.parse(written).environments).join() === 'dev', 'an environment can be removed')
+        addEnvironment()
+        const renamed = rows()[1].querySelector('input')
+        renamed.value = 'dev'
+        renamed.dispatchEvent(new Event('change'))
+        check(JSON.stringify(JSON.parse(written).environments) === '{"dev":"https://develop-web.example.vn","develop":""}', 'a rename onto a taken name is refused, keeping both URLs')
+        check(rows()[1].querySelector('input').value === 'develop', 'the refused name goes back to the old one')
+        const spaced = rows()[1].querySelector('input')
+        spaced.value = 'dev 2'
+        spaced.dispatchEvent(new Event('change'))
+        check('develop' in JSON.parse(written).environments, 'a name with a space is refused')
+
+        // An AI change is told, and can be undone: a stray key on a focused select changes it silently.
+        // Give the tester a model first, so an Undo that drops it shows.
+        const testerSelects = () => roleRow('tester').querySelectorAll('select')
+        testerSelects()[0].value = 'claude'
+        testerSelects()[0].dispatchEvent(new Event('change'))
+        testerSelects()[1].value = 'sonnet'
+        testerSelects()[1].dispatchEvent(new Event('change'))
+        const testerBefore = JSON.stringify(JSON.parse(written).roles.tester)
+        const testerAi = roleRow('tester').querySelector('select')
+        testerAi.value = 'antigravity'
+        testerAi.dispatchEvent(new Event('change'))
+        const notice = document.getElementById('change')
+        check(!notice.hidden && notice.textContent.includes('tester') && notice.textContent.includes('antigravity'), 'an AI change is shown')
+        notice.querySelector('button').click()
+        check(JSON.stringify(JSON.parse(written).roles.tester) === testerBefore && notice.hidden, 'undo puts the old AI and model back')
+        testerAi.value = 'cursor'
+        testerAi.dispatchEvent(new Event('change'))
+        roleRow('tester').querySelectorAll('select')[1].dispatchEvent(new Event('change'))
+        check(notice.hidden, 'a later edit retires the notice and its Undo')
         document.getElementById('out').textContent = failures.length ? failures.join('\n') : 'all checks passed'
         document.title = failures.length ? 'FAIL' : 'PASS'
       }, 300)

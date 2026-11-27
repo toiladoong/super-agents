@@ -2,7 +2,6 @@
 ;(function () {
   // 6 frames a second is enough for pixel animation and keeps the panel cheap.
   const FRAME_MS = 166
-  const LABEL_H = 14
   const i18n = window.officeI18n
 
   const canvas = document.getElementById('office')
@@ -10,6 +9,9 @@
   const tip = document.getElementById('tip')
   const status = document.getElementById('status')
   const { CELL_W, CELL_H, WALL_H, drawWall, drawFloor, drawCell } = window.sprites
+  // Floor between two rows of desks, so the names under one row stay clear of the desks below.
+  const ROW_GAP = 4
+  const ROW_H = CELL_H + ROW_GAP
 
   let tick = 0
   let layout = { scale: 2, columns: 1, rows: 1, offsetX: 0, agents: [] }
@@ -19,9 +21,14 @@
     return i18n.t.elapsed(minutes)
   }
 
-  function shortTitle(agent) {
-    const title = agent.title || agent.agent || 'agent'
-    return title.length > 18 ? `${title.slice(0, 17)}…` : title
+  // The desk label cut to the desk's width (in the current font), so two neighbours never overlap: the title loses
+  // letters first, the time stays.
+  function deskLabel(agent, maxWidth) {
+    const time = ` · ${elapsed(agent.stateStartedAt)}`
+    let title = agent.title || agent.agent || 'agent'
+    if (ctx.measureText(title + time).width <= maxWidth) return title + time
+    while (title.length > 1 && ctx.measureText(`${title}…${time}`).width > maxWidth) title = title.slice(0, -1)
+    return `${title}…${time}`
   }
 
   function computeLayout() {
@@ -31,7 +38,7 @@
     const columns = Math.max(1, Math.floor(cssWidth / scale / CELL_W))
     const agents = window.agentStore.list()
     const rows = Math.max(1, Math.ceil(agents.length / columns))
-    const height = WALL_H + rows * (CELL_H + LABEL_H)
+    const height = WALL_H + rows * ROW_H
     canvas.width = Math.floor(cssWidth * devicePixelRatio)
     canvas.height = Math.floor(height * scale * devicePixelRatio)
     canvas.style.height = `${height * scale}px`
@@ -43,7 +50,7 @@
   function cellOrigin(index) {
     const column = index % layout.columns
     const row = Math.floor(index / layout.columns)
-    return { x: layout.offsetX + column * CELL_W, y: WALL_H + row * (CELL_H + LABEL_H) }
+    return { x: layout.offsetX + column * CELL_W, y: WALL_H + row * ROW_H }
   }
 
   function draw() {
@@ -53,10 +60,9 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     const logicalWidth = canvas.width / pixel
     drawWall(ctx, logicalWidth, tick)
-    for (let row = 0; row < layout.rows; row++) {
-      for (let x = layout.offsetX - CELL_W; x < logicalWidth; x += CELL_W) {
-        drawFloor(ctx, x, WALL_H + row * (CELL_H + LABEL_H))
-      }
+    const logicalHeight = canvas.height / pixel
+    for (let y = WALL_H; y < logicalHeight; y += CELL_H) {
+      for (let x = layout.offsetX - CELL_W; x < logicalWidth; x += CELL_W) drawFloor(ctx, x, y)
     }
     layout.agents.forEach((agent, index) => {
       const { x, y } = cellOrigin(index)
@@ -64,14 +70,22 @@
     })
     // Labels in device pixels so text stays sharp.
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
-    ctx.font = '10px system-ui, sans-serif'
+    ctx.font = '600 11px system-ui, sans-serif'
     ctx.textAlign = 'center'
-    ctx.fillStyle = getComputedStyle(document.body).color
+    // On the floor right under the desk legs (they end 6 px above the cell bottom): dark text with a light halo, clear
+    // on the beige floor in any theme.
+    ctx.textBaseline = 'bottom'
+    ctx.lineJoin = 'round'
+    ctx.lineWidth = 3
+    ctx.strokeStyle = 'rgba(255, 248, 235, 0.85)'
+    ctx.fillStyle = '#21160b'
     layout.agents.forEach((agent, index) => {
       const { x, y } = cellOrigin(index)
       const centerX = (x + CELL_W / 2) * layout.scale
-      const labelY = (y + CELL_H + 10) * layout.scale
-      ctx.fillText(`${shortTitle(agent)} · ${elapsed(agent.stateStartedAt)}`, centerX, labelY)
+      const labelY = (y + CELL_H) * layout.scale - 1
+      const label = deskLabel(agent, CELL_W * layout.scale - 6)
+      ctx.strokeText(label, centerX, labelY)
+      ctx.fillText(label, centerX, labelY)
     })
     status.textContent = layout.agents.length ? '' : i18n.t.noAgents
   }
@@ -94,7 +108,7 @@
     const x = (event.clientX - box.left) / layout.scale - layout.offsetX
     const y = (event.clientY - box.top) / layout.scale - WALL_H
     const column = Math.floor(x / CELL_W)
-    const row = Math.floor(y / (CELL_H + LABEL_H))
+    const row = Math.floor(y / ROW_H)
     return x >= 0 && y >= 0 && column < layout.columns ? layout.agents[row * layout.columns + column] ?? null : null
   }
 

@@ -1,8 +1,8 @@
 ---
 name: dev
-description: Run a ticket / feature with a team of Orca workers — the orchestrator coordinates (research) → plan → coder → review → test; /dev plan only makes the plan (saved to .agents/plans/<ticket>.md) then stops; /dev review for code already written; /dev research only investigates; /dev audit checks the quality of the whole repo or some folders (with ponytail-audit) and reports, fixing nothing; /dev status shows which workers are busy / idle. Roles and AIs come from the repo's .agents/team.json (default Claude). Use when the user calls /dev, or asks to split work across several agents / Orca workers.
+description: Run a ticket / feature with a team of Orca workers — the orchestrator coordinates (research) → plan → coder → review → test; /dev plan only makes the plan (saved to .agents/plans/<ticket>.md) then stops; /dev review for code already written; /dev research only investigates, or with idea weighs whether an idea is worth pursuing (evidence for / against, verdict, cheapest next step); /dev debug finds a bug's root cause (reproduce, hypotheses, evidence) before a test-first fix; /dev audit checks the quality of the whole repo or some folders (with ponytail-audit) and reports, fixing nothing; /dev status shows which workers are busy / idle. Roles and AIs come from the repo's .agents/team.json (default Claude). Use when the user calls /dev, or asks to split work across several agents / Orca workers.
 ---
-# /dev <ticket or description> [--research] [env <name|url>]  ·  /dev plan [here] <ticket>  ·  /dev research <question>  ·  /dev review [here] <ticket> [branch] [env <name|url>]  ·  /dev audit [here] [path …]  ·  /dev status
+# /dev <ticket or description> [--research] [env <name|url>]  ·  /dev plan [here] <ticket>  ·  /dev research [here] [idea] <question or idea>  ·  /dev review [here] <ticket> [branch] [env <name|url>]  ·  /dev audit [here] [path …]  ·  /dev debug [here] <bug>  ·  /dev status
 
 `SKILL_DIR` = absolute path of the folder holding this file. Default roles are in `SKILL_DIR/roles/`, secondary modes
 in `SKILL_DIR/modes.md`.
@@ -15,6 +15,10 @@ in `SKILL_DIR/modes.md`.
   "Plan only" section in `modes.md`.
 - **`review` with the `here` flag** → do not open an orchestrator tab: you are the orchestrator in this tab, follow
   the "In one tab" section in `modes.md` (subagents instead of Orca workers).
+- **`research` with the `here` flag** → do not open an orchestrator tab: run the "Research only" section of
+  `modes.md` in this tab with subagents.
+- **`debug`** → the "Debug a bug" section in `modes.md`; with `here` you run it in this tab with subagents,
+  otherwise open an orchestrator tab as below.
 - **`audit`** → the "Audit the repo" section in `modes.md`; with `here` you run it in this tab with subagents,
   otherwise open an orchestrator tab as below.
 - **Otherwise** (the user types `/dev` in a normal session) → open an orchestrator tab then stop, do not run the flow
@@ -26,7 +30,7 @@ in `SKILL_DIR/modes.md`.
   ```
 
   The arguments as `/dev` gets them: what the user typed after `/dev`; from a shortcut skill, its mode first —
-  `/review SG-1` → `review SG-1`, `/audit webApp/` → `audit webApp/`. Without the mode word the orchestrator would take
+  `/review SG-1` → `review SG-1`, `/audit webApp/` → `audit webApp/`, `/research idea X` → `research idea X`, `/debug X` → `debug X`. Without the mode word the orchestrator would take
   `SG-1` / `webApp/` for a new ticket and start coding.
 
   Tell the user: discussion, spec approval and acceptance happen in the orchestrator tab. If the user says "be the
@@ -43,8 +47,8 @@ Read `.agents/team.json` at the repo root; if missing, use `SKILL_DIR/team.defau
 - `notes`: the repo's own rules (shared folders, resources only the tester uses, skills to read...). The orchestrator
   reads and applies them when splitting work, copying the relevant part into each worker's spec.
 - `environments` (optional): real environments the tester may test on, name → URL, e.g.
-  `{ "staging": "https://staging.example.com", "prod": "https://example.com" }`. `env <name>` picks one, `env <url>`
-  gives a URL directly (`env` counts only when followed by such a name or an `http(s)://` URL, else it is part of the
+  `{ "develop": "https://develop.example.com", "staging": "https://staging.example.com", "production": "https://example.com" }`. `env <name>` picks one, `env <url>`
+  gives a URL directly; a name with an empty URL is not set up yet → ask the user for it (`env` counts only when followed by such a name or an `http(s)://` URL, else it is part of the
   ticket text; the old `--env` works too). Accounts and limits for each environment go in `notes`.
 - `language`: `vi` (default) or `en` — the language every reply to the user, every spec / plan file and every message
   to workers uses. Instructions here are in English; replies follow `language`.
@@ -57,7 +61,8 @@ exactly this form, so the Agent Office panel and `/dev status` recognize it (Orc
 orca orchestration worker-start --agent <agent> [--model <model>] --worktree <...>   --task-title "<role> · <work part>" --spec "<spec>"
 ```
 
-e.g. `--task-title "reviewer · SG-30189 UI"`, `"skeptic · SG-30189"`, `"coder · SG-30189 api"`. The orchestrator names
+e.g. `--task-title "reviewer · SG-30189 UI"`, `"skeptic · SG-30189"`, `"coder · SG-30189 api"` — every task, also the next
+round given to a reused worker (`worker-start --terminal …`): `"tester · SG-30192 round 13"`, not `"Round 13: …"`. The orchestrator names
 its own tab first thing, before the spec: `orca chat rename --name "orchestrator · <name>"` (in a terminal tab:
 `orca terminal rename --title "orchestrator · <name>"`). Roles and their titles: `researcher`, `coder`, `reviewer`,
 `skeptic` (a reviewer worker refuting issues), `tester` — never "review" / "fix" / the ticket key in front.
@@ -100,13 +105,48 @@ The ticket argument is a key (e.g. `SG-30200`), a link (Jira, Figma…) or a tex
    build, per "Real environment" in the tester role; the spec names the environment and the commit it must run. Code
    not deployed there yet (the usual case in a full `/dev` run) → test locally first, then ask the user whether to
    test the environment once it is deployed.
-5. **Acceptance**: summarize for the user (changes, review, test table). With ponytail: `/ponytail:ponytail-debt` on
-   each worktree, put the `shortcut:` items in the summary. **Ask the user to approve** before merging. Merge **one
-   branch at a time**, depended-on parts first; conflict → stop, tell the user, do not resolve it yourself.
+5. **Acceptance**: summarize for the user (changes, review, test table, the rulings made on the way). With ponytail:
+   `/ponytail:ponytail-debt` on each worktree, put the `shortcut:` items in the summary. **Ask the user to approve**,
+   offering for each branch: **merge** into its base, **open a PR** (when the repo has a remote and `gh` / `glab`
+   works), **keep** the branch for later, or **discard** it. Merge **one branch at a time**, depended-on parts first;
+   conflict → stop, tell the user, do not resolve it yourself.
+6. **Clean up** (after the user's choice): release the finished workers (`orca orchestration worker-release
+   --dispatch <id>`); for merged or discarded branches, offer to remove their worktrees (`orca worktree rm`) and
+   branches — ask first, never delete a kept branch or uncommitted work.
+
+## Code graph (graphify, optional)
+With the `graphify` CLI ([graphify](https://github.com/Graphify-Labs/graphify)), the code's call / import graph answers
+"who uses this", "what does changing it touch", "how do A and B connect" faster than grepping. Without it, everything
+below falls back to grep and reading. `"codeGraph": false` in `.agents/team.json` turns all of this off.
+- **Install on confirm** (the orchestrator, at the start, before any worker; `setup` does the same): `graphify --version`
+  fails → ask the user **once**: "Máy chưa có graphify (đồ thị code, chạy tại máy, không gửi code ra ngoài). Cài luôn
+  không?" / "graphify (local code graph, nothing leaves the machine) is not installed. Install it now?". Only on a yes:
+  1. `uv tool install graphifyy` (PyPI name with double y); no `uv` → `pipx install graphifyy`; neither → install
+     uv first (Windows `winget install --id astral-sh.uv -e`, macOS `brew install uv`, Linux
+     `curl -LsSf https://astral.sh/uv/install.sh | sh`), then `uv tool install graphifyy`.
+  2. `graphify` still not found → it is in uv's tool folder (`uv tool dir --bin`): call it by that path this run and
+     tell the user `uv tool update-shell` puts it on PATH for new terminals.
+  3. Check with `graphify --version`. Any step fails → report the error, go on without the graph; don't retry.
+  A no → go on without it, don't ask again this run, and mention that `"codeGraph": false` stops the question for good.
+  Never run `graphify install` (it adds its own hooks to the assistant): super-agents only calls the CLI.
+- **Fresh graph** (after the install, or when graphify is already there; the first build of a big repo can take minutes:
+  say so, and hand out work that does not need the graph meanwhile): `graphify-out/graph.json` exists →
+  `graphify update .`; missing → build it with `graphify extract . --code-only` (parsed locally, nothing sent out, no
+  LLM) — part of the same yes when you just installed it, otherwise ask once. Never run a mode that sends docs to an
+  outside model unless the user set that up. Do not commit `graphify-out/` unless the repo already does; offer to add
+  it to `.gitignore`.
+- **Commands:** `graphify affected "<file or symbol>"` (what depends on it), `graphify query "<question>"`,
+  `graphify path "<A>" "<B>"`, `graphify explain "<name>"`; subsystems are listed in `graphify-out/GRAPH_REPORT.md`.
+- **A lead, not proof:** the graph can be stale or miss dynamic calls; confirm every point it gives by reading the code
+  (`file:line`) before it goes into a spec, a finding or a verdict.
+- **In each worker's spec:** whether the graph is available and, if so, the **absolute path** of the orchestrator's
+  `graphify-out/graph.json`; the worker passes it to every command (`graphify affected "<x>" --graph <path>`), since a
+  new worktree has no `graphify-out/` of its own. That graph shows the base code, not the worker's own changes; a
+  worker that needs those runs `graphify update .` in its worktree first.
 
 ## Dependencies (step 1)
-Consider each pair of work parts. They **must run sequentially** (or be merged into one coder) when any of these signs
-holds:
+Consider each pair of work parts (with the code graph: `graphify affected` on each part's expected files shows where
+they meet). They **must run sequentially** (or be merged into one coder) when any of these signs holds:
 - they edit the same file, or the same generated files;
 - part B uses a module / API / component that part A creates or changes;
 - the ticket says "depends on" / "after" the other part;

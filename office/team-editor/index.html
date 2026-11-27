@@ -61,6 +61,23 @@
       #language select {
         width: 220px;
       }
+      .environment {
+        display: grid;
+        grid-template-columns: 140px 1fr auto;
+        gap: 6px;
+        margin-bottom: 6px;
+      }
+      /* The name box suggests develop / staging / production as you type; no dropdown arrow. */
+      .environment input::-webkit-calendar-picker-indicator {
+        display: none !important;
+      }
+      #change {
+        margin: 0 0 8px;
+        padding: 6px 10px;
+        border-left: 3px solid #ebcb8b;
+        border-radius: 3px;
+        background: rgba(235, 203, 139, 0.15);
+      }
       .note {
         display: flex;
         gap: 6px;
@@ -96,7 +113,13 @@
     <div id="language"></div>
     <h2 id="roles-title"></h2>
     <p class="hint" id="roles-hint"></p>
+    <div id="change" hidden></div>
     <div id="roles"></div>
+    <h2 id="environments-title"></h2>
+    <p class="hint" id="environments-hint"></p>
+    <div id="environments"></div>
+    <datalist id="environment-names"><option value="develop"></option><option value="staging"></option><option value="production"></option></datalist>
+    <button id="add-environment"></button>
     <h2 id="notes-title"></h2>
     <p class="hint" id="notes-hint"></p>
     <div id="notes"></div>

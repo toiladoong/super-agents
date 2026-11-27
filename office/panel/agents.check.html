@@ -12,7 +12,9 @@
         [
           { key: 'b', parentKey: 'a', title: 'reviewer · sửa lỗi coder A', agent: 'codex', state: 'working', stateStartedAt: now, tool: 'Read', workspace: 'wt' },
           { key: 'a', title: 'Phương án tạo agent', agent: 'claude', state: 'waiting', stateStartedAt: now, tool: null, workspace: 'wt' },
-          { key: 'c', title: 'old', agent: 'claude', state: 'done', stateStartedAt: now - 11 * 60 * 1000, tool: null, workspace: 'wt' }
+          { key: 'c', title: 'old', agent: 'claude', state: 'done', stateStartedAt: now - 11 * 60 * 1000, tool: null, workspace: 'wt' },
+          { key: 'd', title: 'Lần 13: ngày giữ khi đổi bố cục', chatName: 'tester · SG-30192', agent: 'claude', state: 'working', stateStartedAt: now, tool: null, workspace: 'wt' },
+          { key: 'e', title: 'orchestrator · SG-30192', agent: 'claude', state: 'waiting', stateStartedAt: now, tool: null, workspace: 'wt' }
         ],
         [{ key: 'a', title: 'Phương án tạo agent', agent: 'claude', state: 'blocked', stateStartedAt: now, tool: 'Bash', workspace: 'wt' }]
       ]
@@ -28,12 +30,14 @@
         const check = (ok, message) => ok || failures.push(message)
         await agentStore.load()
         const first = agentStore.list()
-        check(first.map((agent) => agent.key).join() === 'a,b', 'desks are sorted, and a desk done for over 10 minutes is cleared')
+        check(first.map((agent) => agent.key).join() === 'a,e,b,d', 'orchestrators take the first desks, the rest are sorted, and a desk done for over 10 minutes is cleared')
         check(first[0].title === 'Phương án tạo agent' && first[0].agent === 'claude', 'the session name and AI come from the worker')
-        check(first[1].role === 'reviewer', 'a leading role word wins over a later one')
+        check(first[1].role === 'orchestrator', 'an orchestrator titled after its run sits with the first desks')
+        check(first[2].role === 'reviewer', 'a leading role word wins over a later one')
         check(agentStore.roleOf('SG-30189 coder fix 9 blocking') === 'coder', 'a role word later in the title counts')
         check(agentStore.roleOf('SG-30189 review UI') === 'agent', '"review" is not a role')
         check(first[0].role === 'orchestrator', 'the tab workers report to is the orchestrator')
+        check(first[3].role === 'tester', 'a task titled without the role takes it from the chat name')
         onStatusChanged({ state: 'blocked' })
         await new Promise((resolve) => setTimeout(resolve, 20))
         const second = agentStore.list()
