@@ -26,7 +26,7 @@
       }
       .role {
         display: grid;
-        grid-template-columns: 48px 110px 130px 120px 1fr;
+        grid-template-columns: 48px 110px 130px 120px 130px 1fr;
         gap: 8px;
         align-items: center;
         padding: 6px 0;
@@ -57,6 +57,12 @@
       select option {
         background: var(--orca-background);
         color: var(--orca-foreground);
+      }
+      #effort-mode {
+        margin: 0 0 8px;
+      }
+      #effort-mode select {
+        width: 280px;
       }
       #language select {
         width: 220px;
@@ -113,6 +119,7 @@
     <div id="language"></div>
     <h2 id="roles-title"></h2>
     <p class="hint" id="roles-hint"></p>
+    <div id="effort-mode"></div>
     <div id="change" hidden></div>
     <div id="roles"></div>
     <h2 id="environments-title"></h2>
@@ -126,6 +133,7 @@
     <button id="add-note"></button>
     <script src="../shared/i18n.js"></script>
     <script src="../panel/sprites.js"></script>
+    <script src="environments.js"></script>
     <script src="editor.js"></script>
   </body>
 </html>

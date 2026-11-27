@@ -42,6 +42,14 @@ asks you to approve again.
   If `~/.agents/skills/dev` is a junction to an old clone, remove it so Codex does not load the skill twice.
 - **Orca's orchestration skill:** `orca skills install --skill orchestration`.
 
+## Effort
+At the spec step the orchestrator rates the ticket by **size** (files / parts, story points) and **risk** (auth,
+payments, data, shared code, a bug with no known cause) and picks each role's effort: small → coder medium, reviewer
+low; medium → coder high, reviewer medium; large / risky → coder xhigh, reviewer high; debug / audit / idea research →
+high. The effort is in the spec with its reason, approved with it, changed with one line ("coder xhigh"). In
+**⚙ Team**: an effort box per role ("auto" or a fixed level) and a repo-wide "per ticket / off". Effort needs the
+role's model; a reused worker keeps its effort, another level means a new worker.
+
 ## Code graph (graphify, optional)
 Without [graphify](https://github.com/Graphify-Labs/graphify), the first run's orchestrator (or `/super-agents:setup`) asks
 once and, on a yes, installs it (`uv tool install graphifyy`, installing `uv` first if needed) and builds the repo's graph;

@@ -41,6 +41,14 @@ thì Orca hỏi duyệt lại.
   Máy đã tạo junction `~/.agents/skills/dev` tới bản clone cũ thì xoá junction đó để Codex không nạp skill hai lần.
 - **Skill orchestration của Orca:** `orca skills install --skill orchestration`.
 
+## Effort (mức suy nghĩ)
+Ở bước lập spec, orchestrator chấm ticket theo **độ lớn** (số file / phần, story point) và **rủi ro** (auth, thanh toán,
+dữ liệu, code dùng chung, lỗi chưa rõ nguyên nhân), rồi chọn effort cho từng vai: ticket nhỏ → coder medium, reviewer
+low; vừa → coder high, reviewer medium; lớn / rủi ro → coder xhigh, reviewer high; debug / audit / đánh giá ý tưởng →
+high. Effort ghi trong spec kèm lý do, bạn duyệt spec là duyệt luôn, sửa được bằng một câu ("coder xhigh"). Trong
+**⚙ Team**: mỗi vai có ô effort (để "tự chọn" hoặc cố định một mức), và ô chung "tự chọn theo ticket / tắt". Effort cần
+có model của vai; worker được giao tiếp việc giữ effort cũ, cần mức khác thì mở worker mới.
+
 ## Đồ thị code (graphify, tuỳ chọn)
 Máy chưa có [graphify](https://github.com/Graphify-Labs/graphify) thì lần chạy đầu orchestrator (hoặc `/super-agents:setup`)
 hỏi bạn một câu, đồng ý là tự cài (`uv tool install graphifyy`, cài `uv` trước nếu thiếu) và dựng đồ thị cho repo; không

@@ -6,6 +6,7 @@
     <div id="error"></div>
     <h2 id="language-title"></h2><p id="language-hint"></p><div id="language"></div>
     <h2 id="roles-title"></h2><p id="roles-hint"></p>
+    <div id="effort-mode"></div>
     <div id="change" hidden></div>
     <div id="roles"></div>
     <h2 id="environments-title"></h2><p id="environments-hint"></p>
@@ -38,6 +39,7 @@
     </script>
     <script src="../shared/i18n.js"></script>
     <script src="../panel/sprites.js"></script>
+    <script src="environments.js"></script>
     <script src="editor.js"></script>
     <script>
       setTimeout(() => {
@@ -124,6 +126,36 @@
         testerAi.dispatchEvent(new Event('change'))
         roleRow('tester').querySelectorAll('select')[1].dispatchEvent(new Event('change'))
         check(notice.hidden, 'a later edit retires the notice and its Undo')
+
+        // Effort: per role (empty = picked per ticket), levels follow the AI, an AI change drops it, and a repo-wide mode.
+        const reviewerSelects = () => roleRow('reviewer').querySelectorAll('select')
+        reviewerSelects()[0].value = 'claude'
+        reviewerSelects()[0].dispatchEvent(new Event('change'))
+        check([...reviewerSelects()[2].options].map((option) => option.value).join() === ',low,medium,high,xhigh,max', 'Claude effort levels are offered, empty = per ticket')
+        reviewerSelects()[2].value = 'high'
+        reviewerSelects()[2].dispatchEvent(new Event('change'))
+        check(JSON.parse(written).roles.reviewer.effort === 'high', 'a fixed effort is written')
+        reviewerSelects()[0].value = 'opencode'
+        reviewerSelects()[0].dispatchEvent(new Event('change'))
+        check(!('effort' in JSON.parse(written).roles.reviewer), 'an AI change drops the effort')
+        check(reviewerSelects()[2].disabled, 'an AI without effort levels gets a disabled box')
+        reviewerSelects()[0].value = 'cursor'
+        reviewerSelects()[0].dispatchEvent(new Event('change'))
+        check(reviewerSelects()[2].disabled && reviewerSelects()[2].title === window.officeI18n.t.effortNeedsModel, 'another AI with no model: the effort box waits for a model')
+        reviewerSelects()[1].append(new Option('cursor-x', 'cursor-x'))
+        reviewerSelects()[1].value = 'cursor-x'
+        reviewerSelects()[1].dispatchEvent(new Event('change'))
+        check(!reviewerSelects()[2].disabled, 'with a model, the effort box opens')
+        reviewerSelects()[2].value = 'high'
+        reviewerSelects()[2].dispatchEvent(new Event('change'))
+        reviewerSelects()[1].value = ''
+        reviewerSelects()[1].dispatchEvent(new Event('change'))
+        check(!('effort' in JSON.parse(written).roles.reviewer), 'back to the default model, its effort goes too')
+        const mode = document.querySelector('#effort-mode select')
+        check(mode.value === 'auto', 'effort is picked per ticket by default')
+        mode.value = 'off'
+        mode.dispatchEvent(new Event('change'))
+        check(JSON.parse(written).effort === 'off', 'effort can be turned off for the repo')
         document.getElementById('out').textContent = failures.length ? failures.join('\n') : 'all checks passed'
         document.title = failures.length ? 'FAIL' : 'PASS'
       }, 300)

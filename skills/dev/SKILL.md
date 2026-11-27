@@ -25,10 +25,12 @@ in `SKILL_DIR/modes.md`.
   yourself:
 
   ```
-  orca agent launch --agent <orchestrator.agent> [--model <orchestrator.model>] --worktree current --focus \
+  orca agent launch --agent <orchestrator.agent> [--model <orchestrator.model>] [--effort <orchestrator.effort>] \
+    --worktree current --focus \
     --prompt "You are the orchestrator. Read <SKILL_DIR>/SKILL.md and run with: <the arguments as /dev gets them>"
   ```
 
+  `--effort` only with an `orchestrator.model` and when team.json's `effort` is not `off`.
   The arguments as `/dev` gets them: what the user typed after `/dev`; from a shortcut skill, its mode first —
   `/review SG-1` → `review SG-1`, `/audit webApp/` → `audit webApp/`, `/research idea X` → `research idea X`, `/debug X` → `debug X`. Without the mode word the orchestrator would take
   `SG-1` / `webApp/` for a new ticket and start coding.
@@ -41,8 +43,8 @@ The orchestrator uses Orca mechanics (worker-start, send, when woken up...) per 
 
 ## Config
 Read `.agents/team.json` at the repo root; if missing, use `SKILL_DIR/team.default.json`.
-- `roles.<role>`: `agent` (Orca id: claude, codex, antigravity, cursor, opencode...), `model` (optional), `role` (role
-  prompt file, path from the repo root). Roles: `orchestrator`, `researcher`, `coder`, `reviewer`, `tester`.
+- `roles.<role>`: `agent` (Orca id: claude, codex, antigravity, cursor, opencode...), `model` (optional), `effort`
+  (optional, a fixed level; see "Effort"), `role` (role prompt file, path from the repo root). Roles: `orchestrator`, `researcher`, `coder`, `reviewer`, `tester`.
   Role missing from the file → `agent: claude`, no `--model`. Role missing `role` → `SKILL_DIR/roles/<role>.md`.
 - `notes`: the repo's own rules (shared folders, resources only the tester uses, skills to read...). The orchestrator
   reads and applies them when splitting work, copying the relevant part into each worker's spec.
@@ -50,15 +52,16 @@ Read `.agents/team.json` at the repo root; if missing, use `SKILL_DIR/team.defau
   `{ "develop": "https://develop.example.com", "staging": "https://staging.example.com", "production": "https://example.com" }`. `env <name>` picks one, `env <url>`
   gives a URL directly; a name with an empty URL is not set up yet → ask the user for it (`env` counts only when followed by such a name or an `http(s)://` URL, else it is part of the
   ticket text; the old `--env` works too). Accounts and limits for each environment go in `notes`.
+- `effort`: `auto` (default: the orchestrator picks each role's level per ticket) or `off` (pass none).
 - `language`: `vi` (default) or `en` — the language every reply to the user, every spec / plan file and every message
   to workers uses. Instructions here are in English; replies follow `language`.
 
-Command for each worker (add `--model` only when there is a `model`). The task title **must** start with the role, in
+Command for each worker (add `--model` only when there is a `model`, `--effort` per the "Effort" section). The task title **must** start with the role, in
 exactly this form, so the Agent Office panel and `/dev status` recognize it (Orca shows the task title as the tab name;
 `orca terminal rename` does not reach a chat tab):
 
 ```
-orca orchestration worker-start --agent <agent> [--model <model>] --worktree <...>   --task-title "<role> · <work part>" --spec "<spec>"
+orca orchestration worker-start --agent <agent> [--model <model>] [--effort <level>] --worktree <...>   --task-title "<role> · <work part>" --spec "<spec>"
 ```
 
 e.g. `--task-title "reviewer · SG-30189 UI"`, `"skeptic · SG-30189"`, `"coder · SG-30189 api"` — every task, also the next
@@ -86,7 +89,7 @@ The ticket argument is a key (e.g. `SG-30200`), a link (Jira, Figma…) or a tex
 1. **Spec** (the orchestrator does it itself; if `.agents/plans/<ticket>.md` already exists, use that file, see the
    "Plan only" section in `modes.md`): read the ticket (Jira / Figma if tools exist), write the plan: work parts, files
    expected to change, acceptance criteria, and the **run plan** (the "Dependencies" section below) with merge-conflict
-   risks. New worktrees are created from HEAD: if the current checkout has related uncommitted changes → tell the user
+   risks, and the **effort** per role (the "Effort" section). New worktrees are created from HEAD: if the current checkout has related uncommitted changes → tell the user
    to commit first, or use `/dev review`. **Ask the user to approve** before moving to step 2 (this also approves the
    local commits in step 2 if the plan has sequential parts).
 2. **Code**: per the run plan. One `coder` worker per part, one worktree each:
@@ -113,6 +116,31 @@ The ticket argument is a key (e.g. `SG-30200`), a link (Jira, Figma…) or a tex
 6. **Clean up** (after the user's choice): release the finished workers (`orca orchestration worker-release
    --dispatch <id>`); for merged or discarded branches, offer to remove their worktrees (`orca worktree rm`) and
    branches — ask first, never delete a kept branch or uncommitted work.
+
+## Effort
+How hard each worker thinks (Orca's `--effort`): low effort is fast and cheap, high effort misses less. Pick it per
+role at step 1, write it in the spec with a one-line reason (e.g. "coder high: changes shared-web"), and let the user's
+approval of the spec cover it; the user can change it there ("coder xhigh").
+- **Who decides:** `effort: "off"` in team.json → pass no `--effort`. A role with a fixed `effort` → that level. Else
+  rate the ticket:
+  - **Size:** files / parts expected to change, the ticket's story points or priority when readable, and with the code
+    graph the number of places `graphify affected` lists.
+  - **Risk:** auth, payments, user data, migrations, code shared per `notes`, concurrency, a bug with no known cause.
+- **Levels (Claude names):**
+
+  | Ticket | coder | reviewer / skeptic | researcher | tester |
+  |---|---|---|---|---|
+  | Small, low risk (copy, style, 1–2 files) | medium | low | – | low |
+  | Medium | high | medium | medium | medium |
+  | Large or risky | xhigh | high | high | medium |
+  | Debug / audit / idea research | high | high | high | medium |
+
+- **Per AI:** Claude low / medium / high / xhigh / max; Codex low / medium / high / xhigh; Antigravity and Cursor up to
+  high; OpenCode has none → pass nothing. Use the nearest level the AI takes.
+- **Limits:** `--effort` needs `--model` — a role with no `model` gets none unless you pass that AI's usual model
+  (Claude `opus` / `sonnet`) too. A reused worker (`--terminal`) keeps the effort it started with: a next round that
+  needs another level gets a new worker. The orchestrator's own effort is fixed in team.json (it starts before the
+  ticket is read; `high` is a good default).
 
 ## Code graph (graphify, optional)
 With the `graphify` CLI ([graphify](https://github.com/Graphify-Labs/graphify)), the code's call / import graph answers

@@ -12,10 +12,17 @@
     opencode: ['anthropic/claude-opus-5-5', 'anthropic/claude-sonnet-5-5', 'openai/gpt-6.2-sol']
   }
   const CUSTOM = '__custom__'
+  // Reasoning effort levels each AI takes through Orca's --effort (OpenCode has none).
+  const EFFORTS = {
+    claude: ['low', 'medium', 'high', 'xhigh', 'max'],
+    codex: ['low', 'medium', 'high', 'xhigh'],
+    antigravity: ['low', 'medium', 'high'],
+    cursor: ['low', 'medium', 'high'],
+    opencode: []
+  }
 
   const rolesBox = document.getElementById('roles')
   const notesBox = document.getElementById('notes')
-  const environmentsBox = document.getElementById('environments')
   const errorBox = document.getElementById('error')
   const changeBox = document.getElementById('change')
   const t = () => window.officeI18n.t
@@ -67,8 +74,13 @@
     const roleConfig = { ...(team.roles[role] || {}) }
     if (value) roleConfig[field] = value
     else delete roleConfig[field]
-    // A model name belongs to one AI: drop it whenever the AI changes.
-    if (field === 'agent') delete roleConfig.model
+    // A model name and an effort level belong to one AI: drop them whenever the AI changes.
+    if (field === 'agent') {
+      delete roleConfig.model
+      delete roleConfig.effort
+    }
+    // Another AI's effort only works with a model (see effortField): back to the default model, the effort goes too.
+    if (field === 'model' && !value && (roleConfig.agent || 'claude') !== 'claude') delete roleConfig.effort
     team.roles[role] = roleConfig
     commit(team)
     if (field === 'agent') {
@@ -84,6 +96,16 @@
     }
     render()
   }
+
+  const environments = window.environmentsSection({
+    box: document.getElementById('environments'),
+    session,
+    currentTeam,
+    commit,
+    render: () => render(),
+    showChange,
+    t
+  })
 
   function handleNoteChange(index, value) {
     const team = currentTeam()
@@ -104,42 +126,6 @@
     commit(team)
     render()
     notesBox.querySelector('.note:last-child textarea')?.focus()
-  }
-
-  // Test environments (`environments` in team.json: name → URL), what `env <name>` of /dev and /review picks.
-  const ENVIRONMENT_NAMES = ['develop', 'staging', 'production']
-  // Kept as an object; edited as rows so a rename keeps the order.
-  function handleEnvironmentChange(index, name, url) {
-    const team = currentTeam()
-    const rows = Object.entries(team.environments || {})
-    const newName = name.trim()
-    // `env <name>` needs one plain word; a name taken by another row would overwrite that row's URL.
-    const isTaken = rows.some(([other], at) => at !== index && other === newName)
-    if (!/^[A-Za-z0-9_-]+$/.test(newName) || isTaken) {
-      showChange(t().environmentNameRefused(newName), null)
-      render()
-      return
-    }
-    rows[index] = [newName, url.trim()]
-    team.environments = Object.fromEntries(rows)
-    commit(team)
-  }
-
-  function handleEnvironmentRemove(index) {
-    const team = currentTeam()
-    team.environments = Object.fromEntries(Object.entries(team.environments || {}).filter((_, at) => at !== index))
-    commit(team)
-    render()
-  }
-
-  function handleEnvironmentAdd() {
-    const team = currentTeam()
-    const names = Object.keys(team.environments || {})
-    const name = ENVIRONMENT_NAMES.find((candidate) => !names.includes(candidate)) || `env${names.length + 1}`
-    team.environments = { ...(team.environments || {}), [name]: '' }
-    commit(team)
-    render()
-    environmentsBox.querySelector('.environment:last-child input[type=url]')?.focus()
   }
 
   function drawAvatar(canvas, role, agent) {
@@ -184,6 +170,30 @@
     return choice(value, options, (select) => handleModelSelect(role, select))
   }
 
+  // Empty = the orchestrator picks it per ticket; an AI without levels (OpenCode) gets a disabled box.
+  // Orca's --effort needs --model: for Claude the orchestrator can pass opus / sonnet itself, for another AI with no
+  // model chosen the effort would be dropped silently, so the box waits for a model.
+  function effortField(role, agent, model, value) {
+    const levels = EFFORTS[agent] || []
+    const needsModel = agent !== 'claude' && !model && levels.length > 0
+    const empty = !levels.length ? t().effortNone : needsModel ? t().effortNeedsModel : t().effortAuto
+    const options = [['', empty], ...levels.map((level) => [level, level])]
+    const select = choice(needsModel ? '' : value, options, (box) => handleRoleFieldChange(role, 'effort', box.value))
+    select.disabled = session.readOnly || !levels.length || needsModel
+    select.title = needsModel ? t().effortNeedsModel : t().effortTitle
+    return select
+  }
+
+  // The repo-wide mode: "auto" (default) picks each role's effort per ticket, "off" leaves every AI on its own default.
+  function renderEffortMode(team) {
+    const select = choice(team.effort === 'off' ? 'off' : 'auto', [['auto', t().effortModeAuto], ['off', t().effortModeOff]], (box) => {
+      const next = currentTeam()
+      next.effort = box.value
+      commit(next)
+    })
+    document.getElementById('effort-mode').replaceChildren(select)
+  }
+
   function renderRoles(team) {
     rolesBox.replaceChildren(
       ...roleNames(team).map((role) => {
@@ -200,35 +210,9 @@
           label,
           choice(agent, AGENTS.map((name) => [name, name]), (select) => handleRoleFieldChange(role, 'agent', select.value)),
           modelField(role, agent, roleConfig.model),
+          effortField(role, agent, roleConfig.model, roleConfig.effort),
           field(role, 'role', roleConfig.role, t().rolePlaceholder)
         )
-        return row
-      })
-    )
-  }
-
-  function renderEnvironments(team) {
-    environmentsBox.replaceChildren(
-      ...Object.entries(team.environments || {}).map(([name, url], index) => {
-        const row = document.createElement('div')
-        row.className = 'environment'
-        const nameInput = document.createElement('input')
-        nameInput.value = name
-        nameInput.placeholder = t().environmentName
-        nameInput.setAttribute('list', 'environment-names')
-        const urlInput = document.createElement('input')
-        urlInput.type = 'url'
-        urlInput.value = url
-        urlInput.placeholder = 'https://…'
-        const handleChange = () => handleEnvironmentChange(index, nameInput.value, urlInput.value)
-        nameInput.addEventListener('change', handleChange)
-        urlInput.addEventListener('change', handleChange)
-        const remove = document.createElement('button')
-        remove.textContent = '✕'
-        remove.title = t().removeEnvironment
-        remove.addEventListener('click', () => handleEnvironmentRemove(index))
-        for (const control of [nameInput, urlInput, remove]) control.disabled = session.readOnly
-        row.append(nameInput, urlInput, remove)
         return row
       })
     )
@@ -278,13 +262,14 @@
     document.getElementById('add-environment').textContent = t().addEnvironment
     if (!team) return
     renderLanguage(team)
+    renderEffortMode(team)
     renderRoles(team)
-    renderEnvironments(team)
+    environments.render(team)
     renderNotes(team)
   }
 
   document.getElementById('add-note').addEventListener('click', handleNoteAdd)
-  document.getElementById('add-environment').addEventListener('click', handleEnvironmentAdd)
+  document.getElementById('add-environment').addEventListener('click', environments.handleAdd)
   session.onReplace(render)
   // The editor's own words follow the focused workspace's team.json `language` (else the plugin setting).
   await window.officeI18n.load(render)
