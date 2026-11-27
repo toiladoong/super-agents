@@ -1,6 +1,6 @@
 {
   "name": "super-agents",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "Nhóm agent trong Orca: orchestrator điều phối researcher, coder, reviewer, tester cho một ticket; /office mở văn phòng pixel các agent đang chạy.",
   "author": {
     "name": "Doong"
